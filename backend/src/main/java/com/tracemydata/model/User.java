@@ -12,9 +12,6 @@ public class User {
     @GeneratedValue
     private UUID id;
 
-    @Column(name = "user_name", length = 100)
-    private String userName;
-
     @Column(name = "first_name", length = 500)
     private String firstName;
 
@@ -41,14 +38,6 @@ public class User {
 
     public void setId(UUID id) {
         this.id = id;
-    }
-
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
     }
 
     public String getFirstName() {
