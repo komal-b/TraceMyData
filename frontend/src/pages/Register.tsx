@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ChangeEvent, FormEvent, FocusEvent } from 'react';
 import gmail from '../assets/gmail.png';
-import outlook from '../assets/outlook.png';
+import { Link } from 'react-router-dom';
 
 
 
@@ -172,14 +172,16 @@ export default function Register() {
             <img src={gmail} alt="Google" className="w-8 h-8" />
             Register with Google
           </button>
-          <button
-            type="button"
-            className="w-full flex items-center justify-center gap-2 border border-gray-300 p-3 rounded-lg hover:bg-gray-100 transition"
-          >
-            <img src={outlook} alt="Outlook" className="w-5 h-5" />
-            Register with Outlook
-          </button>
         </div>
+        <p className="text-center text-sm text-gray-600 pt-4">
+          Have an account?{' '}
+          <Link
+            to="/login"
+            className="text-blue-600 font-medium hover:underline"
+          >
+            Login
+          </Link>
+        </p>
       </form>
     </div>
   );
