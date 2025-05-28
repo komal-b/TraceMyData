@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import gmail from '../assets/gmail.png';
-import outlook from '../assets/outlook.png';
+import  { Link } from 'react-router-dom';
+
 
 interface LoginForm {
   email: string;
@@ -87,14 +88,13 @@ export default function Login() {
             <img src={gmail} alt="Google" className="w-8 h-8" />
             Login with Google
           </button>
+            <p className="text-center text-sm text-gray-600 pt-6">
+            Don’t have an account?{' '}
+            <Link to="/register" className="text-blue-600 font-medium hover:underline">
+                Register
+            </Link>
+            </p>
 
-          <button
-            type="button"
-            className="w-full flex items-center justify-center gap-2 border border-gray-300 p-3 rounded-lg hover:bg-gray-100 transition"
-          >
-            <img src={outlook} alt="Outlook" className="w-5 h-5" />
-            Login with Outlook
-          </button>
         </div>
       </form>
     </div>
