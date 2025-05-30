@@ -28,9 +28,20 @@ public class AuthController {
 
     // Register a new user with email/password
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
-        loggers.info("Registering user with email: {}", request.getEmail());
-        return ResponseEntity.ok(authService.register(request));
+    public ResponseEntity<String> initiateRegistration(@RequestBody RegisterRequest request) {
+        loggers.info("Initiating registration for: {}", request.getEmail());
+        String message = authService.initiateRegistration(request);
+        return ResponseEntity.ok(message); // returns: "Verification email sent"
+    }
+    @GetMapping("/verify")
+    public ResponseEntity<String> verifyUser(@RequestParam("token") String token) {
+        loggers.info("Verifying token: {}", token);
+        try {
+            ResponseEntity<String> result = authService.register(token);
+            return ResponseEntity.ok("Email verified"); // "Email verified. Account created."
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     // Local login with email and password
@@ -46,10 +57,5 @@ public class AuthController {
         return ResponseEntity.ok(authService.loginWithGoogle(idToken));
     }
 
-    // Login with Outlook access token
-    @PostMapping("/outlook")
-    public ResponseEntity<AuthResponse> loginWithOutlook(@RequestBody Map<String, String> body) {
-        String accessToken = body.get("accessToken");
-        return ResponseEntity.ok(authService.loginWithOutlook(accessToken));
-    }
+    
 }

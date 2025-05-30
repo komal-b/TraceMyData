@@ -1,10 +1,15 @@
+com/tracemydata/model/TempUser.class
+com/tracemydata/dto/RegisterRequest.class
+com/tracemydata/config/WebConfig.class
+com/tracemydata/repository/TempUserRepository.class
 com/tracemydata/service/AuthService.class
 com/tracemydata/model/User.class
 com/tracemydata/controller/AuthController.class
 com/tracemydata/config/SecurityConfig.class
-com/tracemydata/dto/RegisterRequest.class
+com/tracemydata/config/WebConfig$1.class
 com/tracemydata/config/AppConfig.class
 com/tracemydata/TracemydataApplication.class
+com/tracemydata/service/EmailService.class
 com/tracemydata/repository/UserRepository.class
 com/tracemydata/dto/LoginRequest.class
 com/tracemydata/dto/AuthResponse.class

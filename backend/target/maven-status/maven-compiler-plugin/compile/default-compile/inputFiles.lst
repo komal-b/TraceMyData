@@ -1,11 +1,16 @@
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/TracemydataApplication.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/config/AppConfig.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/config/SecurityConfig.java
+/Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/config/WebConfig.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/controller/AuthController.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/dto/AuthResponse.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/dto/LoginRequest.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/dto/RegisterRequest.java
+/Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/dto/TempUserDTO.java
+/Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/model/TempUser.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/model/User.java
+/Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/repository/TempUserRepository.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/repository/UserRepository.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/service/AuthService.java
+/Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/service/EmailService.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/util/JwtUtil.java
