@@ -5,6 +5,8 @@ import Register from './pages/Register';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Login from './pages/Login';
+import CheckEmail from './pages/CheckEmail';
+import Verify from './pages/Verify';
 
 function App() {
   return (
@@ -19,6 +21,8 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/check-email" element={<CheckEmail />} />
+            <Route path="/verify" element={<Verify />} />
             {/* Add more routes as needed */}
           </Routes>
         </main>

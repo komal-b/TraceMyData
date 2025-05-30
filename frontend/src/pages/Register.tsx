@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ChangeEvent, FormEvent, FocusEvent } from 'react';
 import gmail from '../assets/gmail.png';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 
 
@@ -13,6 +13,7 @@ interface RegisterForm {
 }
 
 export default function Register() {
+  const navigate = useNavigate();
   const [form, setForm] = useState<RegisterForm>({
     firstName: '',
     lastName: '',
@@ -23,6 +24,8 @@ export default function Register() {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+
+
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -65,7 +68,7 @@ export default function Register() {
     if (emailError) return alert('Fix email error before submitting.');
 
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch('http://localhost:8080/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -75,8 +78,9 @@ export default function Register() {
 
       if (!response.ok) throw new Error('Registration failed');
 
-      const data = await response.json();
-      console.log('Success:', data);
+       console.log(await response.text());
+       navigate('/check-email');
+
     } catch (error) {
       console.error('Error:', error);
     }
@@ -186,3 +190,5 @@ export default function Register() {
     </div>
   );
 }
+
+

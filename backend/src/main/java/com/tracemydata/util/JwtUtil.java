@@ -89,22 +89,4 @@ public class JwtUtil {
         return response.getBody(); // contains email, name, etc.
     }
 
-    // Verify Outlook access token using Microsoft Graph API
-    public Map<String, Object> verifyOutlookToken(String accessToken) {
-        // Prepare Authorization header
-        Map<String, String> headers = new HashMap<>();
-        headers.put("Authorization", "Bearer " + accessToken);
-        org.springframework.http.HttpHeaders httpHeaders = new org.springframework.http.HttpHeaders();
-        httpHeaders.setAll(headers);
-
-        // Create request entity
-        org.springframework.http.HttpEntity<String> entity = new org.springframework.http.HttpEntity<>(httpHeaders);
-
-        // Make request to Microsoft API
-        ResponseEntity<Map> response = restTemplate.exchange(outlookProfileUrl, org.springframework.http.HttpMethod.GET, entity, Map.class);
-        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
-            throw new RuntimeException("Invalid Microsoft access token");
-        }
-        return response.getBody(); // contains email, name, etc.
-    }
 }
