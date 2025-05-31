@@ -1,5 +1,6 @@
 package com.tracemydata.repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,4 +14,5 @@ public interface TempUserRepository extends JpaRepository<TempUser, Long> {
     Optional<TempUser> findByToken(String token);
     Optional<TempUser> findByEmail(String email);
     void delete(TempUser tempUser);
+    void deleteByExpiresAtBefore(LocalDateTime time);
 }

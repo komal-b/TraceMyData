@@ -11,7 +11,7 @@ export default function CheckEmail() {
           We've sent a verification link to your email address which will expire in 24 hours. Please check your inbox and click the link to activate your account.
         </p>
         <p className="text-sm text-gray-500 mb-6">
-          Didn’t receive the email? Please check your spam folder or try registering again.
+          Didn’t receive the email? Please check your spam folder or try <a href='/register' text-blue-600>registering again</a>.
         </p>
         <Link
           to="/login"

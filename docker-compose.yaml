@@ -16,9 +16,15 @@ services:
       MAIL_FROM: ${MAIL_FROM}
       APP_FRONTEND_URL: http://localhost:5173
   frontend:
-    build: ./frontend
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
     ports:
       - "5173:5173"
+    environment:
+      - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
 
   db:
     image: postgres:15

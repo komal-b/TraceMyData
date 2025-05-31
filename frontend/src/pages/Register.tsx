@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { ChangeEvent, FormEvent, FocusEvent } from 'react';
 import gmail from '../assets/gmail.png';
 import { Link, useNavigate } from 'react-router-dom';
-
+import { useGoogleLogin } from '@react-oauth/google';
 
 
 interface RegisterForm {
@@ -24,6 +24,8 @@ export default function Register() {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
+  
 
 
 
@@ -61,6 +63,34 @@ export default function Register() {
     }
   };
 
+  const handleGoogleRegister = useGoogleLogin({
+    onSuccess: async (response) => {
+      const { access_token } = response;
+      console.log('Google Access Token:', access_token);
+      try {
+        const res = await fetch('http://localhost:8080/api/auth/google', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ access_token }),
+          credentials: 'include'
+        });
+
+        if (!res.ok) throw new Error('Google registration failed');
+
+        console.log(await res.text());
+        navigate('/complete-registration');
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    },
+    onError: (err) => {
+      console.error('Login Failed:', err);
+    },
+    prompt: 'select_account',
+  });
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -76,7 +106,12 @@ export default function Register() {
         body: JSON.stringify(form),
       });
 
-      if (!response.ok) throw new Error('Registration failed');
+      const message = await response.text();
+
+      if (!response.ok) {
+      setServerError(message);; // show "Email already registered"
+      return;
+    }
 
        console.log(await response.text());
        navigate('/check-email');
@@ -127,37 +162,40 @@ export default function Register() {
         {emailError && (
           <p className="text-sm text-red-500 mt-[-12px]">{emailError}</p>
         )}
+        {serverError && (
+            <p className="text-sm text-red-500 mt-1">{serverError}</p>
+        )}
 
         <input
-  className={`w-full p-3 rounded-lg border ${
-    passwordError ? 'border-red-500' : 'border-gray-300'
-  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-  type="password"
-  name="password"
-  placeholder="Password"
-  value={form.password}
-  onChange={handleChange}
-  onFocus={() => setPasswordFocused(true)}
-  onBlur={(e: FocusEvent<HTMLInputElement>) => {
-    if (!e.target.value) setPasswordFocused(false);
-  }}
-  required
-/>
-{passwordFocused && (
-  <div className="text-sm text-gray-500 text-left mt-1 space-y-1">
-    <p>Password must contain:</p>
-    <ul className="list-disc list-inside text-gray-600">
-      <li>At least 8 characters</li>
-      <li>At least one uppercase letter (A-Z)</li>
-      <li>At least one lowercase letter (a-z)</li>
-      <li>At least one number (0-9)</li>
-      <li>At least one special character (!@#$%^&*)</li>
-    </ul>
-  </div>
-)}
-{passwordError && (
-  <p className="text-sm text-red-500 mt-1">{passwordError}</p>
-)}
+            className={`w-full p-3 rounded-lg border ${
+                passwordError ? 'border-red-500' : 'border-gray-300'
+            } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+            onFocus={() => setPasswordFocused(true)}
+            onBlur={(e: FocusEvent<HTMLInputElement>) => {
+                if (!e.target.value) setPasswordFocused(false);
+            }}
+            required
+        />
+        {passwordFocused && (
+            <div className="text-sm text-gray-500 text-left mt-1 space-y-1">
+                <p>Password must contain:</p>
+                <ul className="list-disc list-inside text-gray-600">
+                <li>At least 8 characters</li>
+                <li>At least one uppercase letter (A-Z)</li>
+                <li>At least one lowercase letter (a-z)</li>
+                <li>At least one number (0-9)</li>
+                <li>At least one special character (!@#$%^&*)</li>
+                </ul>
+            </div>
+        )}
+        {passwordError && (
+        <p className="text-sm text-red-500 mt-1">{passwordError}</p>
+        )}
 
 
         <button
@@ -167,10 +205,13 @@ export default function Register() {
           Register
         </button>
 
+        
+
         {/* Social Buttons */}
         <div className="flex flex-col gap-3 pt-4">
           <button
             type="button"
+            onClick={() => handleGoogleRegister()}
             className="w-full flex items-center justify-center gap-2 border border-gray-300 p-3 rounded-lg hover:bg-gray-100 transition"
           >
             <img src={gmail} alt="Google" className="w-8 h-8" />

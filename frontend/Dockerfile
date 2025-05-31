@@ -17,3 +17,6 @@ EXPOSE 5173
  
 # Define the command to run your app
 CMD ["npm", "run", "dev", "--", "--host"]
+
+ARG VITE_GOOGLE_CLIENT_ID
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID

@@ -11,6 +11,7 @@ import com.tracemydata.repository.UserRepository;
 import com.tracemydata.util.JwtUtil;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -121,7 +122,7 @@ public class AuthService {
     @Transactional
     private AuthResponse handleOAuthLogin(Map<String, Object> payload, String provider) {
         String email = (String) payload.get("email");
-        String name = (String) payload.get("name");
+    
 
         // If user doesn't exist, register a new OAuth user
         User user = userRepo.findByEmail(email).orElseGet(() -> {
@@ -144,5 +145,15 @@ public class AuthService {
         response.setAuthProvider(user.getAuthProvider());
         response.setToken(token);
         return response;
+    }
+
+    public void completeUserProfile(String email, User userDto) {
+        User user = userRepo.findByEmail(email)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+
+        user.setFirstName(userDto.getFirstName());
+        user.setLastName(userDto.getLastName());
+
+        userRepo.save(user);
     }
 }
