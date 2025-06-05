@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import  { Link, useNavigate } from 'react-router-dom';
+import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 
 
 interface LoginForm {
@@ -16,6 +17,7 @@ export default function Login() {
     password: '',
   });
   const [serverError, setServerError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -77,17 +79,27 @@ export default function Login() {
           onChange={handleChange}
           required
         />
-
-        <input
-          className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-          required
-        />
-
+       
+        <div className="relative">
+          <input
+            className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            type={showPassword ? 'text' : 'password'}
+            name="password"
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+            required
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-blue-600 hover:underline focus:outline-none"
+          >
+          {showPassword ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
+          </button>
+        </div>
+  
+          {/* Submit Button */}
         <button
           type="submit"
           className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white p-3 rounded-lg font-semibold shadow-md transition-all"
