@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { ChangeEvent, FormEvent, FocusEvent } from 'react';
 import {  Link, useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
-
+import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 
 interface RegisterForm {
   firstName: string;
@@ -24,7 +24,8 @@ export default function Register() {
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
-  
+  const [showPassword, setShowPassword] = useState(false);
+
 
 
 
@@ -86,7 +87,7 @@ export default function Register() {
     }
 
        
-       navigate('/check-email', { state: { fromRegister: true } });
+      navigate('/check-email', { state: { fromRegister: true } });
 
     } catch (error) {
       console.error('Error:', error);
@@ -137,12 +138,12 @@ export default function Register() {
         {serverError && (
             <p className="text-sm text-red-500 mt-1">{serverError}</p>
         )}
-
+        <div className="relative">
         <input
             className={`w-full p-3 rounded-lg border ${
                 passwordError ? 'border-red-500' : 'border-gray-300'
             } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             name="password"
             placeholder="Password"
             value={form.password}
@@ -153,6 +154,17 @@ export default function Register() {
             }}
             required
         />
+        <button
+          type="button"
+          onClick={() => setShowPassword((prev) => !prev)}
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-blue-600 hover:underline focus:outline-none"
+         >
+        
+        {showPassword ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
+        </button>
+        </div>
+        
+        {/* Password Guidelines */}
         {passwordFocused && (
             <div className="text-sm text-gray-500 text-left mt-1 space-y-1">
                 <p>Password must contain:</p>
@@ -168,7 +180,9 @@ export default function Register() {
         {passwordError && (
         <p className="text-sm text-red-500 mt-1">{passwordError}</p>
         )}
+        
 
+        {/* Submit Button */}
 
         <button
           type="submit"
