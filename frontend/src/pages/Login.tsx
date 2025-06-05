@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
-import gmail from '../assets/gmail.png';
-import  { Link } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
+import  { Link, useNavigate } from 'react-router-dom';
 
 
 interface LoginForm {
@@ -10,10 +10,13 @@ interface LoginForm {
 }
 
 export default function Login() {
+  const navigate = useNavigate();
   const [form, setForm] = useState<LoginForm>({
     email: '',
     password: '',
   });
+  const [serverError, setServerError] = useState<string | null>(null);
+
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -23,19 +26,23 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(form),
-      });
+    const response = await fetch('http://localhost:8080/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(form),
+    });
 
-      if (!response.ok) throw new Error('Login failed');
+    const message = await response.text();
+    console.log('Response:', message);
+    if (!response.ok) {
+      setServerError(message); // show "Error logging in"
+      return;
+    }
 
-      const data = await response.json();
-      console.log('Success:', data);
-      // Navigate or show success
+    navigate('/dashboard');
+    // Navigate or show success
     } catch (error) {
       console.error('Error:', error);
       // Show error message to user
@@ -51,6 +58,15 @@ export default function Login() {
         <h2 className="text-3xl font-bold text-center bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
           Login
         </h2>
+
+        {serverError && (
+          <div className="text-red-500 text-sm text-center">
+            {serverError}
+          </div>
+        )}
+
+        {/* Input Fields */}
+        
 
         <input
           className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -81,13 +97,29 @@ export default function Login() {
 
         {/* Social Buttons */}
         <div className="flex flex-col gap-3 pt-4">
-          <button
-            type="button"
-            className="w-full flex items-center justify-center gap-2 border border-gray-300 p-3 rounded-lg hover:bg-gray-100 transition"
-          >
-            <img src={gmail} alt="Google" className="w-8 h-8" />
-            Login with Google
-          </button>
+          <GoogleLogin
+            text='continue_with'
+            onSuccess={async credentialResponse => {
+              const idToken = credentialResponse.credential
+              const res = await fetch('http://localhost:8080/api/auth/login', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ idToken }),
+              });
+              credentials : 'include'
+              navigate('/dashboard');
+
+              if (!res.ok) throw new Error('Google Login failed');
+
+              
+            }}
+            onError={() => {
+              console.log('Login Failed');
+            }}
+          
+        />
             <p className="text-center text-sm text-gray-600 pt-6">
             Don’t have an account?{' '}
             <Link to="/register" className="text-blue-600 font-medium hover:underline">
@@ -100,3 +132,4 @@ export default function Login() {
     </div>
   );
 }
+

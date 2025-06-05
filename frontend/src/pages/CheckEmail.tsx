@@ -1,6 +1,10 @@
-import { Link } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 
 export default function CheckEmail() {
+  const location = useLocation();
+  if (!location.state?.fromRegister) {
+    return <Navigate to="/login" replace /> ;
+  }
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white px-4 py-12">
       <div className="max-w-md text-center">

@@ -22,14 +22,14 @@ export default function Verify() {
     hasFetched.current = true; // Mark as fetched
 
     fetch(`http://localhost:8080/api/auth/verify?token=${token}`)
-      .then(res => {
-
+      .then(async res => {
+        const message = await res.text()
         if (res.ok) {
-            setStatus('Email verified! Redirecting to login...');
+            setStatus(message);
             setTimeout(() => navigate('/login'), 3000);
         }
         else {
-            setStatus('Verification failed try after some time within 24 hours.');
+            setStatus(message);
             setTimeout(() => navigate('/register'), 3000);
         }
         

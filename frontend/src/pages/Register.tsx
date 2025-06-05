@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import type { ChangeEvent, FormEvent, FocusEvent } from 'react';
-import gmail from '../assets/gmail.png';
-import { Link, useNavigate } from 'react-router-dom';
-import { useGoogleLogin } from '@react-oauth/google';
+import {  Link, useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 
 
 interface RegisterForm {
@@ -63,37 +62,10 @@ export default function Register() {
     }
   };
 
-  const handleGoogleRegister = useGoogleLogin({
-    onSuccess: async (response) => {
-      const { access_token } = response;
-      console.log('Google Access Token:', access_token);
-      try {
-        const res = await fetch('http://localhost:8080/api/auth/google', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ access_token }),
-          credentials: 'include'
-        });
-
-        if (!res.ok) throw new Error('Google registration failed');
-
-        console.log(await res.text());
-        navigate('/complete-registration');
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    },
-    onError: (err) => {
-      console.error('Login Failed:', err);
-    },
-    prompt: 'select_account',
-  });
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-
+    setServerError(null);
     // Final validation before submission
     if (emailError) return alert('Fix email error before submitting.');
 
@@ -109,12 +81,12 @@ export default function Register() {
       const message = await response.text();
 
       if (!response.ok) {
-      setServerError(message);; // show "Email already registered"
+      setServerError(message); // show "Email already registered"
       return;
     }
 
-       console.log(await response.text());
-       navigate('/check-email');
+       
+       navigate('/check-email', { state: { fromRegister: true } });
 
     } catch (error) {
       console.error('Error:', error);
@@ -208,16 +180,31 @@ export default function Register() {
         
 
         {/* Social Buttons */}
-        <div className="flex flex-col gap-3 pt-4">
-          <button
-            type="button"
-            onClick={() => handleGoogleRegister()}
-            className="w-full flex items-center justify-center gap-2 border border-gray-300 p-3 rounded-lg hover:bg-gray-100 transition"
-          >
-            <img src={gmail} alt="Google" className="w-8 h-8" />
-            Register with Google
-          </button>
-        </div>
+       
+
+        <GoogleLogin
+          text='continue_with'
+          onSuccess={async credentialResponse => {
+            const idToken = credentialResponse.credential
+            const res = await fetch('http://localhost:8080/api/auth/google', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ idToken }),
+            });
+            // Include credentials for cookies
+            credentials : 'include'
+
+            if (!res.ok) throw new Error('Google Login failed');
+
+            navigate('/dashboard', { replace: true });
+          }}
+          onError={() => {
+            console.log('Login Failed');
+          }}
+          
+        />
         <p className="text-center text-sm text-gray-600 pt-4">
           Have an account?{' '}
           <Link

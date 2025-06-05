@@ -4,6 +4,7 @@ services:
     build: ./backend
     ports:
       - "8080:8080"
+      - "5005:5005"
     depends_on:
       - db
     environment:
@@ -15,6 +16,8 @@ services:
       MAIL_PASSWORD: ${MAIL_PASSWORD}
       MAIL_FROM: ${MAIL_FROM}
       APP_FRONTEND_URL: http://localhost:5173
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+
   frontend:
     build: 
       context: ./frontend

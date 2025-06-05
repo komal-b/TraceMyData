@@ -7,7 +7,6 @@ import Footer from './components/Footer';
 import Login from './pages/Login';
 import CheckEmail from './pages/CheckEmail';
 import Verify from './pages/Verify';
-import CompleteRegistration from './pages/CompleteRegistration';
 
 function App() {
   return (
@@ -24,7 +23,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/check-email" element={<CheckEmail />} />
             <Route path="/verify" element={<Verify />} />
-            <Route path="/complete-registration" element={<CompleteRegistration />} />
+  
             {/* Add more routes as needed */}
           </Routes>
         </main>

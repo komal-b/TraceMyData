@@ -1,6 +1,6 @@
 # Use the latest LTS version of Node.js
 FROM node:18-alpine
- 
+
 # Set the working directory inside the container
 WORKDIR /app
  
@@ -20,3 +20,5 @@ CMD ["npm", "run", "dev", "--", "--host"]
 
 ARG VITE_GOOGLE_CLIENT_ID
 ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+ 
+

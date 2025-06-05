@@ -1,9 +1,15 @@
 package com.tracemydata.util;
 
+
 import com.tracemydata.model.User;
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -15,6 +21,8 @@ import java.util.Map;
 
 @Component
 public class JwtUtil {
+
+    private Logger loggers = LoggerFactory.getLogger(JwtUtil.class);
 
     // JWT secret key (should be at least 256 bits, stored in .env or properties)
     @Value("${app.jwt.secret}")
@@ -57,17 +65,15 @@ public class JwtUtil {
     }
 
     // Validate the JWT (signature + expiration)
-    public boolean validateToken(String token) {
-        try {
-            Jwts.parser()
-                .verifyWith(key) // use key to verify signature
-                .build()
-                .parseSignedClaims(token); // parse claims
-            return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            return false; // if token is invalid or tampered
-        }
+    public boolean validateToken(String token, UserDetails userDetails) {
+        return extractUsername(token).equals(userDetails.getUsername());
     }
+
+      public String extractUsername(String token) {
+        return getUserIdFromToken(token); // 'sub' in JWT is email
+    }
+
+    
 
     // Extract user ID (subject) from token
     public String getUserIdFromToken(String token) {
@@ -82,7 +88,9 @@ public class JwtUtil {
     // Verify Google ID token using official Google OAuth API
     public Map<String, Object> verifyGoogleToken(String idToken) {
         String url = googleTokenInfoUrl + idToken;
+        loggers.info("Google Url: "+url);
         ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+        loggers.info((String) response.getBody().get("given_name"));
         if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
             throw new RuntimeException("Invalid Google ID token");
         }

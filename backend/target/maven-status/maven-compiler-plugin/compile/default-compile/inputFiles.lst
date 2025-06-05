@@ -5,7 +5,6 @@
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/dto/AuthResponse.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/dto/LoginRequest.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/dto/RegisterRequest.java
-/Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/dto/TempUserDTO.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/model/TempUser.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/model/User.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/repository/TempUserRepository.java
