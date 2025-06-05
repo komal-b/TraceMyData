@@ -1,5 +1,6 @@
 package com.tracemydata.service;
 
+
 import com.tracemydata.dto.AuthResponse;
 import com.tracemydata.dto.LoginRequest;
 import com.tracemydata.dto.RegisterRequest;
@@ -10,6 +11,9 @@ import com.tracemydata.repository.TempUserRepository;
 import com.tracemydata.repository.UserRepository;
 import com.tracemydata.util.JwtUtil;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -18,13 +22,15 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.Map;
-
+import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.transaction.Transactional;
 
 @Service
 public class AuthService {
+
+    private Logger loggers = LoggerFactory.getLogger(AuthService.class);
 
 
     private final TempUserRepository tempUserRepository; // Repository for temporary user registrations
@@ -45,23 +51,23 @@ public class AuthService {
     }
 
     public String initiateRegistration(RegisterRequest request) {
-    userRepo.findByEmail(request.getEmail()).ifPresent(u -> {
-        throw new RuntimeException("Email already registered");
-    });
+        userRepo.findByEmail(request.getEmail()).ifPresent(u -> {
+            throw new RuntimeException("Email already registered");
+        });
 
-    String token = UUID.randomUUID().toString();
-    TempUser temp = new TempUser();
-    temp.setFirstName(request.getFirstName());
-    temp.setLastName(request.getLastName());
-    temp.setEmail(request.getEmail());
-    temp.setPassword(passwordEncoder.encode(request.getPassword()));
-    temp.setToken(token);
-    temp.setExpiresAt(LocalDateTime.now().plusHours(24));
-    emailService.sendVerificationEmail(request.getEmail(), token);
-    tempUserRepository.save(temp);
+        String token = UUID.randomUUID().toString();
+        TempUser temp = new TempUser();
+        temp.setFirstName(request.getFirstName());
+        temp.setLastName(request.getLastName());
+        temp.setEmail(request.getEmail());
+        temp.setPassword(passwordEncoder.encode(request.getPassword()));
+        temp.setToken(token);
+        temp.setExpiresAt(LocalDateTime.now().plusHours(24));
+        emailService.sendVerificationEmail(request.getEmail(), token);
+        tempUserRepository.save(temp);
 
-    return "Verification email sent";
-}
+        return "Verification email sent";
+    }
 
 
     // Handles user registration for local auth
@@ -72,7 +78,7 @@ public class AuthService {
             .orElseThrow(() -> new RuntimeException("Invalid or expired token"));
     if (tempUser.isExpired()) {
         tempUserRepository.delete(tempUser);
-        return ResponseEntity.badRequest().body("Verification link expired.");
+        return ResponseEntity.badRequest().body("Verification link expired. Redirecting to Register...");
     }
 
     // Create new user entity
@@ -87,7 +93,7 @@ public class AuthService {
     userRepo.save(newUser);
     tempUserRepository.delete(tempUser); // Clean up temp user
 
-    return ResponseEntity.ok("Email verified. Account created.");
+    return ResponseEntity.ok("Email verified! Redirecting to login...");
     }
 
     // Handles login for local users
@@ -112,7 +118,7 @@ public class AuthService {
     }
 
     // Handles login via Google OAuth
-    public AuthResponse loginWithGoogle(String idToken) {
+    public String loginWithGoogle(String idToken) {
         Map<String, Object> payload = jwtUtil.verifyGoogleToken(idToken);
         return handleOAuthLogin(payload, "google");
     }
@@ -120,22 +126,36 @@ public class AuthService {
 
     // Shared method for processing OAuth logins (Google/Outlook)
     @Transactional
-    private AuthResponse handleOAuthLogin(Map<String, Object> payload, String provider) {
-        String email = (String) payload.get("email");
-    
-
-        // If user doesn't exist, register a new OAuth user
-        User user = userRepo.findByEmail(email).orElseGet(() -> {
-            User newUser = new User();
-            newUser.setId(UUID.randomUUID());
-            newUser.setEmail(email);
-            newUser.setAuthProvider(provider);
-            return userRepo.save(newUser);
-        });
-
-        // Generate token and return response
-        String token = jwtUtil.generateToken(user);
-        return mapToAuthResponse(user, token);
+    private String handleOAuthLogin(Map<String, Object> payload, String provider) {
+        
+        try{
+            User user = null;
+            String email = (String) payload.get("email");
+            // If user doesn't exist, register a new OAuth user
+            Optional<User> user_email = userRepo.findByEmail(email);
+            if(user_email.isEmpty()){
+                user = registerNewOAuthUser(payload);
+            }
+            else{
+                user = user_email.get();
+            }
+            // Generate token and return response
+            
+            return jwtUtil.generateToken(user);
+        }catch (DataIntegrityViolationException e) {
+            throw new RuntimeException("Database error during OAuth login", e);
+        } catch (Exception e) {
+             throw new RuntimeException("OAuth login failed", e);
+        }   
+        
+    }
+    private User registerNewOAuthUser(Map<String, Object> payload) {
+        User newUser = new User();
+        newUser.setEmail((String) payload.get("email"));
+        newUser.setFirstName((String) payload.get("given_name"));
+        newUser.setLastName((String) payload.get("family_name"));
+        newUser.setAuthProvider("google");
+        return userRepo.save(newUser);
     }
 
     // Utility to map user entity + token into AuthResponse DTO
@@ -147,12 +167,12 @@ public class AuthService {
         return response;
     }
 
-    public void completeUserProfile(String email, User userDto) {
+    public void completeUserProfile(String email, String firstName, String lastName) {
         User user = userRepo.findByEmail(email)
             .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
-        user.setFirstName(userDto.getFirstName());
-        user.setLastName(userDto.getLastName());
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
 
         userRepo.save(user);
     }

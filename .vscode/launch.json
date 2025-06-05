@@ -1,0 +1,20 @@
+// {
+//     "version": "0.2.0",
+//     "configurations": [
+//         {
+//             "type": "java",
+//             "name": "TracemydataApplication",
+//             "request": "launch",
+//             "mainClass": "com.tracemydata.TracemydataApplication",
+//             "projectName": "tracemydata"
+//         },
+//         {
+//             "type": "java",
+//             "name": "Debug (Attach to Docker)",
+//             "request": "attach",
+//             "hostName": "localhost",
+//             "port": 5005
+//         }
+//     ]
+//   }
+  
