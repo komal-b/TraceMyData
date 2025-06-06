@@ -3,7 +3,7 @@ import type { ChangeEvent, FormEvent } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import  { Link, useNavigate } from 'react-router-dom';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
-
+import { jwtDecode } from "jwt-decode";
 
 interface LoginForm {
   email: string;
@@ -36,13 +36,17 @@ export default function Login() {
       body: JSON.stringify(form),
     });
 
-    const message = await response.text();
-    console.log('Response:', message);
+    
+   
     if (!response.ok) {
+      const message = await response.text();
       setServerError(message); // show "Error logging in"
       return;
     }
-
+    const userData = await response.json();
+    localStorage.setItem("user", JSON.stringify(
+      { email: userData.email, profilePic: userData.profilePic || '' }
+    ));
     navigate('/dashboard');
     // Navigate or show success
     } catch (error) {
@@ -112,15 +116,26 @@ export default function Login() {
           <GoogleLogin
             text='continue_with'
             onSuccess={async credentialResponse => {
-              const idToken = credentialResponse.credential
-              const res = await fetch('http://localhost:8080/api/auth/login', {
+              const idToken = credentialResponse.credential;
+              if (!idToken) {
+                console.error('No ID token received from Google');
+                return;
+              }
+              
+              const res = await fetch('http://localhost:8080/api/auth/google', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ idToken }),
               });
-              credentials : 'include'
+
+              
+              const decoded: any = jwtDecode(idToken);
+              const profilePic = decoded.picture || '';
+              const email = decoded.email;
+              
+              localStorage.setItem("user", JSON.stringify({ email, profilePic }));
               navigate('/dashboard');
 
               if (!res.ok) throw new Error('Google Login failed');
