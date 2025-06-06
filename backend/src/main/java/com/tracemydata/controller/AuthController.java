@@ -17,8 +17,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
-import java.time.Duration;
+
 import java.util.Map;
 
 @RestController
@@ -75,7 +74,22 @@ public class AuthController {
         return ResponseEntity.ok("Login successful");
     }
 
-    
+    @PostMapping("logout")
+    public ResponseEntity<String> logout() {
+        // Clear the JWT cookie
+        ResponseCookie cookie = ResponseCookie.from("jwt", "")
+                .path("/") 
+                .sameSite("Strict")// Set path to root
+                .maxAge(0) // Set max age to 0 to delete it
+                .httpOnly(true)
+                .secure(true) // HttpOnly for security
+                .build();
+        loggers.info("User logged out, clearing JWT cookie");
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body("Logged out successfully");
+    }
+
 
     
 }
