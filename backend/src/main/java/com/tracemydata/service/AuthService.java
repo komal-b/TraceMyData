@@ -118,7 +118,7 @@ public class AuthService {
     }
 
     // Handles login via Google OAuth
-    public String loginWithGoogle(String idToken) {
+    public AuthResponse loginWithGoogle(String idToken) {
         Map<String, Object> payload = jwtUtil.verifyGoogleToken(idToken);
         return handleOAuthLogin(payload, "google");
     }
@@ -126,7 +126,7 @@ public class AuthService {
 
     // Shared method for processing OAuth logins (Google/Outlook)
     @Transactional
-    private String handleOAuthLogin(Map<String, Object> payload, String provider) {
+    private AuthResponse handleOAuthLogin(Map<String, Object> payload, String provider) {
         
         try{
             User user = null;
@@ -140,8 +140,9 @@ public class AuthService {
                 user = user_email.get();
             }
             // Generate token and return response
+            String token = jwtUtil.generateToken(user);
             
-            return jwtUtil.generateToken(user);
+            return mapToAuthResponse(user, token);
         }catch (DataIntegrityViolationException e) {
             throw new RuntimeException("Database error during OAuth login", e);
         } catch (Exception e) {
@@ -161,6 +162,8 @@ public class AuthService {
     // Utility to map user entity + token into AuthResponse DTO
     private AuthResponse mapToAuthResponse(User user, String token) {
         AuthResponse response = new AuthResponse();
+        response.setFirstName(user.getFirstName());
+        response.setLastName(user.getLastName());
         response.setEmail(user.getEmail());
         response.setAuthProvider(user.getAuthProvider());
         response.setToken(token);

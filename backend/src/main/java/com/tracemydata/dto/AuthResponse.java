@@ -6,6 +6,8 @@ public class AuthResponse {
     private String email;
     private String authProvider;
     private String token;
+    private String firstName;
+    private String lastName;
 
     // ----- Getters and Setters -----
 
@@ -31,5 +33,19 @@ public class AuthResponse {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+    public String getFirstName() {
+        return firstName;
+    }
+    public String getLastName() {
+        return lastName;
     }
 }

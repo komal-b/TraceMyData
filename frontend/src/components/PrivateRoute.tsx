@@ -8,6 +8,8 @@ interface Props {
 
 export default function PrivateRoute({ children }: Props) {
   const user = localStorage.getItem('user');
+  
+  console.log('User data from localStorage:', user);
    const isAuthenticated = user !== null;
 
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;

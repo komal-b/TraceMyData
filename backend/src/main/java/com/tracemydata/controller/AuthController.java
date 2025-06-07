@@ -70,8 +70,10 @@ public class AuthController {
     @PostMapping("/google")
     public ResponseEntity<?> loginWithGoogle(@RequestBody Map<String, String> body, HttpServletResponse response) {
         String token = body.get("idToken");
-        String jwt = authService.loginWithGoogle(token);
-        return ResponseEntity.ok("Login successful");
+        if (token == null || token.isEmpty()) {
+            return ResponseEntity.badRequest().body("ID token is required");
+        }
+        return ResponseEntity.ok(authService.loginWithGoogle(token));
     }
 
     @PostMapping("logout")

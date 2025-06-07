@@ -7,6 +7,7 @@ export async function logout(navigate: Function) {
     });
 
     localStorage.removeItem("user"); // frontend data only
+
     navigate("/login");
   } catch (err) {
     console.error("Logout failed", err);

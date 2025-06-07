@@ -1,9 +1,20 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import privacy from '../assets/privacy.png';
 import chart from '../assets/chart.png';
 import monitor from '../assets/monitor.png';
+import { useEffect } from 'react';
+
+
+
 export default function Home() {
+  const navigate = useNavigate();
+  useEffect(() => {
+  const storedUser = localStorage.getItem('user');
+  if (storedUser) {
+    navigate('/dashboard');
+  }
+}, [navigate]);
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-white text-gray-900 py-12 px-4">
       <div className="max-w-screen-xl w-full mx-auto px-4 sm:px-6 md:px-8 text-center">
@@ -68,6 +79,7 @@ export default function Home() {
         </div>
 
         {/* CTA Buttons */}
+        {localStorage.getItem('user') ? null :  (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -87,6 +99,7 @@ export default function Home() {
             Existing User? Login
           </Link>
         </motion.div>
+      )} 
 
         {/* Footer */}
         <motion.div
