@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import {  useEffect, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import  { Link, useNavigate } from 'react-router-dom';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import { jwtDecode } from "jwt-decode";
+import type { User } from '../type/User';
+
 
 interface LoginForm {
   email: string;
@@ -18,7 +20,8 @@ export default function Login() {
   });
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-
+  
+  
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -44,9 +47,16 @@ export default function Login() {
       return;
     }
     const userData = await response.json();
-    localStorage.setItem("user", JSON.stringify(
-      { email: userData.email, profilePic: userData.profilePic || '' }
-    ));
+    console.log('Login Response:', userData);
+    const user: User = {
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        profilePic: userData.profilePic || '',
+        authProvider: userData.authProvider ,
+        token: userData.token,
+    };
+      localStorage.setItem("user", JSON.stringify({ user }));
     navigate('/dashboard');
     // Navigate or show success
     } catch (error) {
@@ -54,6 +64,13 @@ export default function Login() {
       // Show error message to user
     }
   };
+
+  useEffect(() => {
+  const storedUser = localStorage.getItem('user');
+  if (storedUser) {
+    navigate('/dashboard');
+  }
+}, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4 py-12">
@@ -130,12 +147,27 @@ export default function Login() {
                 body: JSON.stringify({ idToken }),
               });
 
+              console.log('Google Login Response:', res);
               
               const decoded: any = jwtDecode(idToken);
-              const profilePic = decoded.picture || '';
-              const email = decoded.email;
               
-              localStorage.setItem("user", JSON.stringify({ email, profilePic }));
+              
+              const userVal = await res.json();
+              if (!userVal || !userVal.email) {
+                console.error('Invalid user data received from Google');
+                return;
+              }
+              const user: User = {
+              email: userVal.email,
+              firstName: userVal.firstName,
+              lastName: userVal.lastName,
+              profilePic: decoded.profilePic || '',
+              authProvider: userVal.authProvider ,
+              token: userVal.token,
+          };
+            localStorage.setItem("user", JSON.stringify({ user }));
+            
+              
               navigate('/dashboard');
 
               if (!res.ok) throw new Error('Google Login failed');

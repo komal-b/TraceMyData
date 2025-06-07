@@ -14,7 +14,6 @@ function App() {
   return (
     <Router>
       <div className="flex flex-col min-h-screen bg-gray-900 text-white">
-        {/* Navigation */}
         <Navbar />
 
         {/* Main Content */}
@@ -26,18 +25,16 @@ function App() {
             <Route path="/check-email" element={<CheckEmail />} />
             <Route path="/verify" element={<Verify />} />
             <Route
-                path="/dashboard"
-                element={
-                  <PrivateRoute>
-                    <Dashboard />
-                  </PrivateRoute>
-                }
-              />
-            {/* Add more routes as needed */}
+              path="/dashboard"
+              element={
+                <PrivateRoute>
+                  <Dashboard />
+                </PrivateRoute>
+              }
+            />
           </Routes>
         </main>
 
-        {/* Footer */}
         <Footer />
       </div>
     </Router>
