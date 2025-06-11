@@ -1,5 +1,6 @@
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/TracemydataApplication.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/config/AppConfig.java
+/Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/config/JwtAuthFilter.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/config/SecurityConfig.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/controller/AuthController.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/dto/AuthResponse.java
@@ -10,6 +11,8 @@
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/repository/TempUserRepository.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/repository/UserRepository.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/service/AuthService.java
+/Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/service/CustomUserDetailsService.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/service/EmailService.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/service/TempUserCleanupJob.java
 /Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/util/JwtUtil.java
+/Users/komalbagwe/TraceMyData/backend/src/main/java/com/tracemydata/util/Stirng.java

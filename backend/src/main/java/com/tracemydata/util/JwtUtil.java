@@ -15,6 +15,9 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import javax.crypto.SecretKey;
+
+import java.nio.charset.StandardCharsets;
+import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,9 +49,11 @@ public class JwtUtil {
     @PostConstruct
     public void init() {
         // Initialize the signing key using HS384 algorithm
-        this.key = Jwts.SIG.HS384.key().build();
+        this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        //this.key = Jwts.SIG.HS384.key().build();
     }
 
+   
     // Generate JWT with user data as claims
     public String generateToken(User user) {
         Map<String, Object> claims = new HashMap<>();
@@ -57,7 +62,7 @@ public class JwtUtil {
 
         return Jwts.builder()
                 .claims(claims) // custom claims
-                .subject(user.getId().toString()) // subject is user ID
+                .subject(user.getEmail()) // subject is user ID
                 .issuedAt(new Date()) // token creation time
                 .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs)) // token expiration time
                 .signWith(key, Jwts.SIG.HS384) // sign token using HMAC SHA-384
@@ -70,7 +75,9 @@ public class JwtUtil {
     }
 
       public String extractUsername(String token) {
-        return getUserIdFromToken(token); // 'sub' in JWT is email
+        String email =  getUserIdFromToken(token);
+        loggers.info("Extracted email from token: " + email);
+        return email; // 'sub' in JWT is email
     }
 
     
@@ -82,7 +89,7 @@ public class JwtUtil {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
-                .getSubject(); // subject is user ID
+                .get("email", String.class); // subject is user ID
     }
 
     // Verify Google ID token using official Google OAuth API

@@ -15,4 +15,5 @@ public interface TempUserRepository extends JpaRepository<TempUser, Long> {
     Optional<TempUser> findByEmail(String email);
     void delete(TempUser tempUser);
     void deleteByExpiresAtBefore(LocalDateTime time);
+    boolean existsByEmail(String email);
 }

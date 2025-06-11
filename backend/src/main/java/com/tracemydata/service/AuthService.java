@@ -21,11 +21,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 
 @Service
 public class AuthService {
@@ -39,22 +41,26 @@ public class AuthService {
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final RestTemplate restTemplate;
+    private TempUserCleanupJob tempUserCleanupJob;
 
     // Constructor initializes dependencies
-    public AuthService(UserRepository userRepo, TempUserRepository tempUserRepository, EmailService emailService, JwtUtil jwtUtil, RestTemplate restTemplate) {
+    public AuthService(UserRepository userRepo, TempUserCleanupJob tempUserCleanupJob , TempUserRepository tempUserRepository, EmailService emailService, JwtUtil jwtUtil, RestTemplate restTemplate) {
         this.tempUserRepository = tempUserRepository;
         this.emailService = emailService;
         this.userRepo = userRepo;
         this.passwordEncoder = new BCryptPasswordEncoder();
         this.jwtUtil = jwtUtil;
         this.restTemplate = restTemplate;
+        this.tempUserCleanupJob = tempUserCleanupJob;
     }
 
     public String initiateRegistration(RegisterRequest request) {
         userRepo.findByEmail(request.getEmail()).ifPresent(u -> {
             throw new RuntimeException("Email already registered");
         });
-
+        if(tempUserRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("A registration request is already pending for this email");
+        }
         String token = UUID.randomUUID().toString();
         TempUser temp = new TempUser();
         temp.setFirstName(request.getFirstName());
@@ -72,17 +78,20 @@ public class AuthService {
 
     // Handles user registration for local auth
     @Transactional
-    public ResponseEntity register(String token) {
+    public ResponseEntity<?> register(String token) {
         // Check if email is already registered
     TempUser tempUser = tempUserRepository.findByToken(token)
-            .orElseThrow(() -> new RuntimeException("Invalid or expired token"));
+            .orElseThrow(() -> new RuntimeException("Invalid or Expired token. Try registering again."));
+    
     if (tempUser.isExpired()) {
         tempUserRepository.delete(tempUser);
-        return ResponseEntity.badRequest().body("Verification link expired. Redirecting to Register...");
+        
     }
 
+
     // Create new user entity
-    User newUser = new User();
+    User newUser = userRepo.findById(tempUser.getUser_id())
+            .orElse(new User()); // If user already exists, update it
 
     newUser.setFirstName(tempUser.getFirstName());
     newUser.setLastName(tempUser.getLastName());
@@ -179,4 +188,142 @@ public class AuthService {
 
         userRepo.save(user);
     }
+
+    @Transactional
+    public AuthResponse updateProfile(Map<String, String> profileData, String email) {
+          User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        
+        
+        
+            user.setFirstName(profileData.get("firstName"));
+            user.setLastName(profileData.get("lastName"));
+            userRepo.save(user);
+            String token = jwtUtil.generateToken(user);
+            return mapToAuthResponse(user, token);
+    }
+    @Transactional
+    public String updateEmail(Map<String, String> profileData, String oldEmail) {  
+        User user = userRepo.findByEmail(oldEmail)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + oldEmail)); 
+        userRepo.findByEmail(profileData.get("newEmail")).ifPresent(u -> {
+            throw new RuntimeException("Email already registered");
+        });
+      
+        if(tempUserRepository.existsByEmail(profileData.get("newEmail"))) {
+            throw new RuntimeException("Email already pending for verification. Please check your inbox.");
+        }
+        try{
+            TempUser tempUser = new TempUser();
+            String token = UUID.randomUUID().toString();
+            tempUser.setFirstName(profileData.get("firstName"));
+            tempUser.setLastName(profileData.get("lastName"));
+            tempUser.setEmail(profileData.get("newEmail"));
+            tempUser.setPassword(user.getPasswordHash()); // Keep the same password hash
+            tempUser.setUser_id(user.getId());
+            tempUser.setToken(token);
+            tempUser.setCreatedAt(LocalDateTime.now());
+            tempUser.setExpiresAt(LocalDateTime.now().plusHours(24)); // 24hr expiry
+            tempUserRepository.save(tempUser);
+            emailService.sendVerificationEmail(tempUser.getEmail(), token); 
+
+        }catch (DataIntegrityViolationException e) {
+            throw new RuntimeException("Database error during email update", e);
+        } catch (Exception e) {
+            throw new RuntimeException("Email update failed", e);
+        }
+        
+
+        return "We've sent a verification link to your new email address. Please verify within 24 hours to complete the update.";
+        
+    }
+
+    @Transactional
+    /**
+     * Initiates the password reset process by sending a verification email with a token.
+     *
+     * @param email The user's email address.
+     * @throws RuntimeException if the email is not registered or if a reset request is already pending.
+     */
+    public void forgotPassword(String email) {
+
+         User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email not registered"));
+        
+        if(user.getAuthProvider().equals("google") ) {
+            throw new RuntimeException("Cannot reset password for OAuth accounts");
+        }
+        if(tempUserRepository.existsByEmail(email)) {
+            throw new RuntimeException("A password reset request is already pending. Please check your email.");
+        }
+        try{
+            String token = UUID.randomUUID().toString();
+            TempUser temp = new TempUser();
+            temp.setFirstName(user.getFirstName());
+            temp.setLastName(user.getLastName());
+            temp.setEmail(user.getEmail());
+            temp.setToken(token);
+            temp.setPassword(user.getPasswordHash());
+            temp.setExpiresAt(LocalDateTime.now().plusMinutes((long) 0.5)); // 30 minutes expiry
+            temp.setUser_id(user.getId());
+            tempUserRepository.save(temp);
+            emailService.sendForgotPassword(email, token);
+
+        }catch (DataIntegrityViolationException e) {
+            throw new RuntimeException("Database error during password reset", e);
+        } catch (Exception e) {
+            throw new RuntimeException("Password reset failed", e);
+        }
+        
+    }
+    
+
+    @Transactional
+    /**
+     * Resets the user's password using a temporary token.
+     *
+     * @param token The temporary token sent to the user's email.
+     * @param newPassword The new password to set for the user.
+     * @throws RuntimeException if the token is invalid, expired, or if the new password is the same as the old one.
+     */
+    public void resetPassword(String token, String newPassword) {
+    
+        TempUser tempUser = tempUserRepository.findByToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid or Expired token. Try resetting your password again."));
+
+        loggers.info("Resetting password for user: {}", tempUser.getEmail());
+        if (tempUser.isExpired()) {
+           tempUserRepository.delete(tempUser);
+       
+        }
+        if(passwordEncoder.matches(newPassword, tempUser.getPassword())) {
+            throw new RuntimeException("New password cannot be the same as the old password");
+        }
+
+        User user = userRepo.findById(tempUser.getUser_id())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepo.save(user);
+        tempUserRepository.delete(tempUser); // Clean up temp user
+
+        loggers.info("Password reset successful for user: {}", user.getEmail());
+    }
+
+    @Transactional
+    public void changePassword(String username, String oldPassword, String newPassword) {
+        // TODO Auto-generated method stub
+        User user = userRepo.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + username));
+        if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
+            throw new RuntimeException("Old password is incorrect");
+        }
+        if (passwordEncoder.matches(newPassword, user.getPasswordHash())) {
+            throw new RuntimeException("New password cannot be the same as the old password");
+        }
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepo.save(user);
+    }
+
+    
 }

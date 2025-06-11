@@ -2,9 +2,14 @@ package com.tracemydata.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+
+import com.tracemydata.model.TempUser;
 import com.tracemydata.repository.TempUserRepository;
+
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -28,4 +33,6 @@ public class TempUserCleanupJob {
         tempUserRepository.deleteByExpiresAtBefore(now);
         logger.info("Deleted expired temp users at: " + now);
     }
+
+    
 }

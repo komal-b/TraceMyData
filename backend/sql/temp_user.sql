@@ -8,3 +8,4 @@ CREATE TABLE temp_user (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP NOT NULL
 );
+

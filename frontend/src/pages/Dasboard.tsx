@@ -100,6 +100,11 @@ export default function Dashboard() {
     }
   };
 
+  function handleUserUpdate(updatedUser: User): void {
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify({ user: updatedUser }));
+  }
+
   return (
   
     <div className="min-h-screen flex bg-gray-100">
@@ -107,7 +112,8 @@ export default function Dashboard() {
         <ProfileUpdate
                   open={showModal}
                   onClose={() => setShowModal(false)}
-                  user={user}  token={user.token ?? ''}      />
+                  user={user}  token={user.token ?? ''}  
+                  onUserUpdate={handleUserUpdate}    />
       )}
 
       <aside
