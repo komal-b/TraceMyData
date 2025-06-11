@@ -1,5 +1,7 @@
+com/tracemydata/config/JwtAuthFilter.class
 com/tracemydata/model/TempUser.class
 com/tracemydata/dto/RegisterRequest.class
+com/tracemydata/util/Stirng.class
 com/tracemydata/service/TempUserCleanupJob.class
 com/tracemydata/repository/TempUserRepository.class
 com/tracemydata/service/AuthService.class
@@ -7,6 +9,7 @@ com/tracemydata/model/User.class
 com/tracemydata/controller/AuthController.class
 com/tracemydata/config/SecurityConfig.class
 com/tracemydata/config/AppConfig.class
+com/tracemydata/service/CustomUserDetailsService.class
 com/tracemydata/TracemydataApplication.class
 com/tracemydata/service/EmailService.class
 com/tracemydata/repository/UserRepository.class

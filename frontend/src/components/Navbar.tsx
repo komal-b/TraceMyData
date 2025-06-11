@@ -13,6 +13,7 @@ export default function Navbar() {
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
+      console.log('Stored User:', storedUser);
       setUser(JSON.parse(storedUser).user);
      
     } else {

@@ -1,6 +1,7 @@
 package com.tracemydata.model;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -37,6 +38,9 @@ public class TempUser {
 
     @Column(name = "expired_at", nullable = false)
     private LocalDateTime expiresAt;
+
+    @Column(name = "user_id")
+    private UUID user_id;
 
     public TempUser() {
         this.createdAt = LocalDateTime.now();
@@ -88,6 +92,18 @@ public class TempUser {
     }
     public void setExpiresAt(LocalDateTime expiresAt) {
         this.expiresAt = expiresAt;
+    }
+    public UUID getUser_id() {
+        return user_id;
+    }
+    public void setUser_id(UUID user_id) {
+        this.user_id = user_id;
+    }
+    public Long getId() {
+        return id;
+    }   
+    public void setId(Long id) {
+        this.id = id;
     }
 }
    

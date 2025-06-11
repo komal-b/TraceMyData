@@ -165,7 +165,7 @@ export default function Register() {
         <button
           type="button"
           onClick={() => setShowPassword((prev) => !prev)}
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-blue-600 hover:underline focus:outline-none"
+          className="absolute right-3 text-blue-600 top-3 text-md cursor-pointer"
          >
         
         {showPassword ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}

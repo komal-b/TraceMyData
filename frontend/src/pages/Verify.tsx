@@ -1,6 +1,7 @@
 // src/pages/Verify.tsx
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { logout } from '../utils/Logout';
 
 export default function Verify() {
   const [status, setStatus] = useState('Verifying...');
@@ -8,7 +9,14 @@ export default function Verify() {
 
   const navigate = useNavigate();
 
+ 
+
   useEffect(() => {
+
+    const storedUser = localStorage.getItem('user');
+  if (storedUser) {
+    logout(navigate);
+  }
 
     if (hasFetched.current) return; // Prevent multiple fetches
     

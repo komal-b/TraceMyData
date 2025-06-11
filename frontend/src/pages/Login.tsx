@@ -47,7 +47,7 @@ export default function Login() {
       return;
     }
     const userData = await response.json();
-    console.log('Login Response:', userData);
+
     const user: User = {
         email: userData.email,
         firstName: userData.firstName,
@@ -111,13 +111,22 @@ export default function Login() {
             onChange={handleChange}
             required
           />
-          <button
-            type="button"
+          <span
+         
             onClick={() => setShowPassword((prev) => !prev)}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-blue-600 hover:underline focus:outline-none"
+            className="absolute right-3 text-blue-600 top-3 text-md cursor-pointer"
           >
           {showPassword ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
-          </button>
+          </span>
+          <div className="flex justify-end mt-1">
+            <Link
+              to="/forgot-password"
+              state={{ fromLogin: true }}
+              className="text-sm text-blue-600 hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
         </div>
   
           {/* Submit Button */}
@@ -147,7 +156,7 @@ export default function Login() {
                 body: JSON.stringify({ idToken }),
               });
 
-              console.log('Google Login Response:', res);
+          
               
               const decoded: any = jwtDecode(idToken);
               
