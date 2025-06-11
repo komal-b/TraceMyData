@@ -9,10 +9,9 @@ const [emailError, setEmailError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
-    if (e.target.value === 'email') {
-      validateEmail(e.target.value);
-    }
+    const value = e.target.value;
+    setEmail(value);
+    validateEmail(value);
   };
 
   useEffect(() => {
