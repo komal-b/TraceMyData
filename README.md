@@ -39,7 +39,7 @@ The Home Page serves as the primary landing page for the TraceMyData application
 
 #### 2.1 Registration Functionality
 
-This system implements a secure user registration process with email verification, commonly known as a "double opt-in" method. This ensures that only users with valid and accessible email addresses can complete their registration and create an account.
+This system implements a secure user registration process with email verification, commonly known as a "double opt-in" method. This ensures that only users with valid and accessible email addresses can complete their registration and create an account also it allows GoogleOAuth Login
 
 ##### 2.1.1 Purpose of Registration
 
@@ -57,6 +57,15 @@ For initial registration, the system expects a `RegisterRequest` object, which a
 * `password`: The user's chosen password.
 * `firstName`: The user's first name.
 * `lastName`: The user's last name.
+
+***Login Form Components***
+
+* **Input Fields:** Includes fields for `email`, `password`, `firstName` and `lastName`.
+* **Password Visibility Toggle:** A toggle button allows users to show or hide their password input for convenience and verification.
+* **Social Login Button:** Integrates a `GoogleLogin` component to enable authentication via Google OAuth.
+* **Login Link:** A convenient link to the `login` page for users who do not yet have an account.
+* **Error Display:** A designated area to display server-side error messages (e.g., "Email already registered").
+
 
 **Validation Rules:**
 
@@ -111,5 +120,49 @@ The system provides robust error handling for various scenarios:
     * "Invalid or Expired token. Try registering again.": Returned if the provided token doesn't match an existing `temp_user` record or if the token has expired (beyond 24 hours).
     * General `Exception` during verification: Caught and returned as a `ResponseEntity.badRequest()` with the exception message.
 
+#### 2.2 Login Functionality
+
+This section details the user login process, covering both local (email/password) and social (Google OAuth) authentication methods.
+
+##### 2.2.1 Purpose of Login
+
+The primary purpose of login is to allow existing users to securely authenticate themselves and gain access to their personalized `dashboard` and other authenticated features within the TraceMyData application.
+
+##### 2.2.2 Login Form Components
+
+* **Input Fields:** Includes fields for `email` and `password`.
+* **Password Visibility Toggle:** A toggle button allows users to show or hide their password input for convenience and verification.
+* **Forgot Password Link:** A link to the `forgot-password` page is provided for users who need to reset their password.
+* **Social Login Button:** Integrates a `GoogleLogin` component to enable authentication via Google OAuth.
+* **Registration Link:** A convenient link to the `register` page for users who do not yet have an account.
+* **Error Display:** A designated area to display server-side error messages (e.g., "Invalid credentials").
+
+
+##### 2.2.3 Backend Login Logic (`POST /login`)
+
+The backend handles local (email/password) login requests via the `/login` endpoint.
+
+* **Endpoint:** `POST /login`
+* **Request Body:** Expects a `LoginRequest` object containing `email` and `password`.
+* **Process (`authService.login`):**
+    1.  **User Lookup:** Attempts to find a user in the `User` database (`userRepo.findByEmail`) using the provided email. If not found, a "User not found" error is thrown.
+    2.  **Authentication Provider Check:** Verifies that the found user's `authProvider` is explicitly "local". If the user account was created via an OAuth provider (e.g., "google"), an error "This account uses [OAuth provider] login" is returned, guiding the user to the correct login method.
+    3.  **Password Verification:** The provided plain-text password is compared against the stored hashed password (`user.getPasswordHash()`) using `passwordEncoder.matches()`. If they do not match, an "Invalid credentials" error is thrown.
+    4.  **JWT Token Generation:** Upon successful email and password verification, a JSON Web Token (JWT) is generated for the authenticated user using `jwtUtil.generateToken(user)`.
+    5.  **Response Mapping:** The `AuthResponse` object is created and populated with the user's `firstName`, `lastName`, `email`, `authProvider`, and the newly generated `token`.
+
+##### 2.2.4 Backend Response and Error Handling
+
+* **Success Response:**
+    * A `ResponseEntity.ok()` is returned with an `AuthResponse` object in the body.
+    * The `AuthResponse` contains essential user details (`firstName`, `lastName`, `email`, `authProvider`) and the generated JWT `token`.
+* **Error Responses:**
+    * `ResponseEntity.badRequest().body()` is returned for various authentication failures:
+        * "User not found": If the email does not exist in the database.
+        * "This account uses [OAuth provider] login": If a local login attempt is made for an OAuth-registered account.
+        * "Invalid credentials": If the password does not match the stored hash.
+        * General `Exception` handling catches other unexpected errors, returning their messages.
+
+---
 
 
