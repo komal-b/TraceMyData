@@ -28,6 +28,7 @@ public class TempUserCleanupJob {
 
     // Runs every hour (can change to once a day if preferred)
     @Scheduled(cron = "0 0 * * * *") // At minute 0 of every hour
+    @Transactional
     public void deleteExpiredTempUsers() {
         LocalDateTime now = LocalDateTime.now();
         tempUserRepository.deleteByExpiresAtBefore(now);

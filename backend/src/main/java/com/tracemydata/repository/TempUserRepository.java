@@ -8,6 +8,8 @@ import org.springframework.stereotype.Repository;
 
 import com.tracemydata.model.TempUser;
 
+import jakarta.transaction.Transactional;
+
 @Repository
 public interface TempUserRepository extends JpaRepository<TempUser, Long> {
     TempUser save(TempUser tempUser);
