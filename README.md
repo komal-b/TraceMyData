@@ -296,7 +296,191 @@ The backend handles the final step of setting the new password.
     * Throws `RuntimeException` for various validation failures (e.g., invalid/expired token, new password is same as old, user not found).
     * These exceptions are caught by the controller and returned as `ResponseEntity.badRequest()`.
 
+### 2.5 Profile Management
+
+This section details the functionalities that allow authenticated users to manage and update their profile information and account credentials. 
+
+#### 2.5.1 Update Profile (Name & Email)
+
+This functionality allows users to modify their first name, last name, and, for local accounts, initiate an email change.
+
+##### 2.5.1.1 Purpose
+
+To provide users with the ability to keep their personal information accurate and, if necessary, update their primary email address linked to their account.
+
+##### 2.5.1.2 User Interface (Frontend - `ProfileUpdate`, `NavBar` Component)
+
+
+
+The `Navbar.tsx` component handles the display of user information and provides the logout option.
+
+* **Conditional Display:** The navigation bar displays content based on the user's authentication status:
+    * **Not Logged In:** Shows a "Home" link.
+    * **Logged In:** Displays a profile avatar which, when clicked, reveals a dropdown menu containing a "Logout" button.
+* **State Management:** Manages the `user` object and `dropdownOpen` state for the profile menu.
+* **Session Initialization:** An `useEffect` hook populates the `user` state from `localStorage` on component mount.
+* **Dropdown Control:** Uses `useRef` and `useEffect` to close the dropdown when a click occurs outside of it.
+
+The `ProfileUpdate.tsx` component is a modal interface for updating profile details.
+
+* **Inputs:** Fields for `firstName`, `lastName`.
+* **Email Display & Change:**
+    * Displays the current email.
+    * For `local` authentication providers, a "Change Email" button is present. Clicking this reveals a new input field (`newEmail`) for the desired new email address.
+    * Email input is disabled for Google authenticated users as their email is managed by Google.
+    * A message indicates that a verification email will be sent for email changes.
+* **Save Changes Button:** Submits the updated profile data.
+* **Toast Notifications:** Uses `react-toastify` to display success or error messages to the user.
+* **Client-Side Validation:** Validates the `newEmail` format using a regex.
+
+##### 2.5.1.3 Frontend Process
+
+1.  **Form Input:** User modifies `firstName`, `lastName`, and optionally `newEmail`.
+2.  **Email Change Initiation:** If "Change Email" is clicked, the `newEmail` input becomes visible and editable.
+3.  **`handleSave` Function:**
+    * Performs client-side validation for `newEmail` if applicable.
+    * Constructs a payload including `firstName`, `lastName`, and `newEmail` (conditionally).
+    * Sends a `POST` request to `http://localhost:8080/api/auth/update-profile` with `Content-Type: application/json` and `Authorization: Bearer <token>`.
+    * **Success Handling:**
+        * Parses the JSON response from the backend.
+        * Constructs an `updatedUser` object by merging the existing `user` prop with the updated data from the response. This ensures all `user` properties are preserved.
+        * Updates `localStorage` with the `updatedUser` object.
+        * Calls the `onUserUpdate` prop function to update the parent component's user state, ensuring UI consistency.
+        * Displays a success toast message and then closes the modal (`onClose`).
+    * **Error Handling:** Displays an error toast message with the backend's error.
+
+##### 2.5.1.4 Backend Endpoints & Logic
+
+* **Endpoint:** `POST /update-profile`
+* **Purpose:** Handles general profile updates (first name, last name) and initiates the email change process.
+* **Authorization:** Requires a valid JWT in the `Authorization` header. The user's `username` (email) is extracted from the authenticated `SecurityContextHolder`.
+* **Request Body:** A JSON object containing `firstName`, `lastName`, and optionally `newEmail`.
+* **Logic Branching:**
+    * **Case 1: Update Name Only (No `newEmail` provided)**
+        * Calls `authService.updateProfile(profileData, username)`.
+        * `authService.updateProfile`:
+            * Retrieves the `User` entity by the authenticated `email`.
+            * Updates the `firstName` and `lastName` fields.
+            * Saves the updated `User` entity to the database.
+            * Generates a **new JWT token** for the updated user.
+            * Returns an `AuthResponse` containing the updated user details and the new token.
+        * Response: Returns `ResponseEntity.ok()` with a success message and the `AuthResponse` object.
+    * **Case 2: Initiate Email Change (`newEmail` provided)**
+        * Calls `updateEmail(profileData, username)`.
+        * `updateEmail`:
+            * Retrieves the `User` entity by the `oldEmail` (authenticated user's email).
+            * Checks if the `newEmail` is already registered in the `User` table or if a `TempUser` record exists for the `newEmail` (pending verification). Throws `RuntimeException` if either is true.
+            * Creates a new `TempUser` record:
+                * Populates with `firstName`, `lastName` from `profileData`.
+                * Sets the `email` to `newEmail`.
+                * Copies the **original `User`'s `passwordHash`**.
+                * Links to the original `User`'s `id`.
+                * Generates a unique `token` for email verification.
+                * Sets an `expiresAt` timestamp (24 hours).
+            * Saves the `TempUser` record.
+            * Sends a verification email to the `newEmail` address using `emailService.sendVerificationEmail`. If user clicks on link sent on email then the user will be logged out and need to login again with new email
+            * Returns a success message indicating that a verification link has been sent.
+        * Response: Returns `ResponseEntity.ok()` with a success message.
+* **Error Handling:** Catches various `Exception` types, including `RuntimeException` for business logic errors (e.g., "User not found", "Email already registered", "Email already pending") and `DataIntegrityViolationException` for database errors, returning appropriate `ResponseEntity.badRequest()`.
+
+#### 2.5.2 Change Password
+
+This functionality allows users with local accounts to change their password by providing their old password and setting a new one.
+
+##### 2.5.2.1 Purpose
+
+To allow authenticated users to update their account password securely.
+
+##### 2.5.2.2 User Interface (Frontend - `ProfileUpdate` Component)
+
+The "Change Password" section within the `ProfileUpdate.tsx` modal.
+
+* **Visibility:** This section is only rendered if the `user.authProvider` is 'local'.
+* **Toggle:** Initially, a disabled password input field is shown. A "Change Password" button toggles the visibility of the actual input fields for old and new passwords.
+* **Inputs:** `oldPassword` and `newPassword` fields.
+* **Password Visibility Toggles:** Individual toggles for `oldPassword` and `newPassword` fields (`passwordVisible`, `confirmVisible`).
+* **Update Password Button:** Submits the password change request.
+* **Toast Notifications:** Used for displaying success or error messages.
+* **State Management:** `oldPassword`, `newPassword`, `showChangePassword`, `passwordVisible`, `confirmVisible` states manage the password input fields.
+
+##### 2.5.2.3 Frontend Process
+
+1.  **Form Input:** User enters their `oldPassword` and `newPassword`.
+2.  **`handlePasswordChange` Function:**
+    * Sends a `POST` request to `http://localhost:8080/api/auth/change-password` with `Content-Type: application/json` and `Authorization: Bearer <token>`.
+    * The request body contains `oldPassword` and `newPassword`.
+    * **Success Handling:**
+        * Displays a success toast message.
+        * On the toast's close, the user is explicitly `logout` from the client-side (`localStorage` cleared), and redirected to the `/login` page. An alert notifies the user they must log in with their new password.
+    * **Error Handling:** Displays an error toast message with the backend's error.
+
+##### 2.5.2.4 Backend Endpoints & Logic
+
+* **Endpoint:** `POST /change-password`
+* **Purpose:** Verifies the old password and updates the user's password to the new one.
+* **Authorization:** Requires a valid JWT in the `Authorization` header. The user's `username` (email) is extracted from the authenticated `SecurityContextHolder`.
+* **Request Body:** A JSON object containing `oldPassword` and `newPassword`.
+* **Input Validation:** Checks if both `oldPassword` and `newPassword` are provided and not empty.
+* **`authService.changePassword(String username, String oldPassword, String newPassword)`:**
+    1.  **User Lookup:** Retrieves the `User` entity using the authenticated `username` (email).
+    2.  **Old Password Verification:** Uses `passwordEncoder.matches(oldPassword, user.getPasswordHash())` to compare the provided `oldPassword` with the stored hashed password. Throws "Old password is incorrect" if they don't match.
+    3.  **New vs. Old Password Check:** Checks if the `newPassword` is the same as the current password (after hashing). Throws "New password cannot be the same as the old password" if they are identical.
+    4.  **Password Update:** Encodes the `newPassword` using `passwordEncoder.encode()` and updates the `user.passwordHash`.
+    5.  **Save User:** Saves the updated `User` entity to the database.
+* **Response:** Returns `ResponseEntity.ok()` with a success message ("Password changed successfully") on success.
+* **Error Handling:** Catches `Exception` types, including `RuntimeException` for business logic errors, returning `ResponseEntity.badRequest()` with the error message.
+
+### 2.6 Logout Functionality
+
+This functionality allows authenticated users to securely log out of their session, terminating their access to protected resources.
+
+#### 2.6.1 Purpose
+
+To provide a secure way for users to end their session, revoke their authentication token, and clear their local login state, preventing unauthorized access to their account from the current device.
+
+#### 2.6.2 User Interface (Frontend - `Navbar` Component)
+
+The `Navbar.tsx` component handles the display of user information and provides the logout option.
+
+* **Conditional Display:** The navigation bar displays content based on the user's authentication status:
+    * **Not Logged In:** Shows a "Home" link.
+    * **Logged In:** Displays a profile avatar which, when clicked, reveals a dropdown menu containing a "Logout" button.
+* **State Management:** Manages the `user` object and `dropdownOpen` state for the profile menu.
+* **Session Initialization:** An `useEffect` hook populates the `user` state from `localStorage` on component mount.
+* **Dropdown Control:** Uses `useRef` and `useEffect` to close the dropdown when a click occurs outside of it.
+
+#### 2.6.3 Frontend Process
+
+1.  **Logout Initiation:** Clicking the "Logout" button in the profile dropdown calls the `logout(navigate)` utility function.
+2.  **`logout` Utility Function:**
+    * This function (likely in `../utils/Logout.ts`) coordinates the client-side logout.
+    * It **clears `localStorage`** by removing the "user" item.
+    * It makes an asynchronous `POST` request to the backend's logout endpoint (e.g., `http://localhost:8080/logout`).
+    * Finally, it redirects the user to the application's home or login page (`Maps('/')`).
+
+#### 2.6.4 Backend Endpoint & Logic
+
+* **Endpoint:** `POST /logout`
+* **Purpose:** To invalidate the user's session and delete the authentication JWT cookie from the client's browser.
+* **Request Method:** Uses `POST` for security best practices, as logout is a state-changing operation.
+* **Cookie Invalidation:**
+    1.  A `ResponseCookie` object is constructed to instruct the client's browser to delete the JWT cookie.
+    2.  It sets the cookie's name to "jwt" with an empty value, sets the `path` to root (`/`), sets `maxAge` to `0` (immediate expiration), and includes `httpOnly(true)` and `secure(true)` for enhanced security.
+* **Logging:** A `loggers.info` statement confirms the successful clearing of the JWT cookie.
+* **Response:** Returns `ResponseEntity.ok()` with a `HttpHeaders.SET_COOKIE` header containing the invalidation cookie and a success message ("Logged out successfully"). This response triggers the browser to delete the cookie.
+
 ---
+
+
+
+
+
+
+
+
+
+
+
 
 
 
