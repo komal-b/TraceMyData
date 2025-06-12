@@ -209,6 +209,94 @@ This private method is specifically for creating a new `User` entity when a user
 * **Authentication Provider:** Explicitly sets the `authProvider` to "google" to indicate the origin of this account.
 * **Save User:** The new `User` entity is saved to the main `User` database via `userRepo.save(newUser)`.
 
+#### 2.4 Forgot Password Functionality
+
+This section details the two-step password reset process, allowing users to regain access to their accounts if they forget their password.
+
+##### 2.4.1 Purpose of Forgot Password 
+
+The primary purpose is to provide a secure mechanism for users to reset their password without knowing their old one, ensuring that only the legitimate email account holder can initiate and complete the process. This helps in maintaining account security and usability.
+
+##### 2.4.2 Initiate Password Reset (Frontend - `ForgotPassword` Component)
+
+* **User Interface:**
+    * An input field for the user's `email` address.
+    * A "Send Reset Link" button to submit the request.
+    * Areas to display messages (green for success, red for errors, including email validation errors).
+* **State Management:**
+    * `email`: Stores the user's input email.
+    * `emailError`: Stores client-side email validation errors.
+    * `message`: Stores success messages (e.g., "If this email is registered...").
+    * `error`: Stores general error messages (e.g., "Failed to send reset email.").
+* **Client-Side Validation:** The `validateEmail` function uses a regex pattern to ensure the entered text is a valid email format before submission.
+* **Form Submission (`handleSubmit`):**
+    * Upon submission, a `POST` request is sent to `http://localhost:8080/api/auth/forgot-password` with the `email` in the JSON body.
+    * **Success Response:** If the response is `ok`, a generic success message is displayed to the user ("If this email is registered, you will receive a password reset link shortly.") to prevent email enumeration attacks.
+    * **Error Response:** If the response is not `ok`, the specific error message from the backend is displayed.
+* **Route Protection:** An `useEffect` hook ensures that if a user is already logged in, they are redirected to the `/dashboard`. Additionally, `useLocation` checks if the user navigated from the `/login` page; if not, they are redirected back to `/login` to ensure a proper flow.
+
+##### 2.4.3 Initiate Password Reset (Backend - `/forgot-password` Endpoint)
+
+The backend handles the request to initiate a password reset.
+
+* **Endpoint:** `POST /forgot-password`
+* **Purpose:** Receives a user's email and starts the password reset process by generating a token and sending a reset email.
+* **Request Body:** Expects a JSON body with a single field: `email` (String).
+* **Forgot Password flow**
+    1.  **User Lookup:** Finds the `User` by the provided `email`. Throws "Email not registered" if no user is found.
+    2.  **OAuth Account Check:** Prevents password reset for accounts registered via OAuth (e.g., Google), throwing "Cannot reset password for OAuth accounts."
+    3.  **Pending Request Check:** Checks if a password reset request is already pending for this email in `tempUserRepository`. Throws "A password reset request is already pending..." if so.
+    4.  **Token Generation:** Generates a unique `token` (UUID).
+    5.  **Temporary User Record (`TempUser`) Creation:** A new `TempUser` record is created to store the user's `firstName`, `lastName`, `email`, the generated `token`, the hashed password from the `User` table, a `30-minute expiration timestamp`, and the original `User`'s `id`. This temporary record links the reset request to the actual user and their current password hash.
+    6.  **Save Temporary User:** The `TempUser` record is saved to `tempUserRepository`.
+    7.  **Send Email:** Calls  to dispatch the reset email.
+* **Error Handling:**
+    * Returns `RuntimeException` for specific business logic errors (e.g., "Email not registered", "Cannot reset password for OAuth accounts", "A password reset request is already pending").
+    * Catches `DataIntegrityViolationException` and generic `Exception` for database or other failures during the process.
+
+##### 2.4.4 Complete Password Reset (Frontend - `ResetPassword` Component)
+
+The `ResetPassword.tsx` component allows users to set a new password using the token received in their email.
+
+* **User Interface:**
+    * Input fields for "New Password" and "Confirm New Password".
+    * A password visibility toggle (`AiOutlineEye`/`AiOutlineEyeInvisible`).
+    * A "Submit" button to finalize the password change.
+    * Areas to display error messages (red) or success messages (green, with a spinning icon for redirection).
+* **Token Retrieval:** Uses `useSearchParams` from `react-router-dom` to extract the `token` from the URL query parameters.
+* **Client-Side Validation:**
+    * Checks if a `token` is present in the URL.
+    * Verifies that "New Password" and "Confirm New Password" fields match.
+* **Form Submission (`handleSubmit`):**
+    * Upon submission, a `POST` request is sent to `http://localhost:8080/api/auth/reset-password?token=${token}`.
+    * The request body contains the `token` and `newPassword` (the value of the `password` state), serialized as JSON.
+    * **Success Response:** If the response is `ok`, `setSuccess(true)` is called, and after a 3-second delay, the user is redirected to the `/login` page.
+    * **Error Response:** If the response is not `ok`, the specific error message from the backend is displayed.
+* **Session Check:** Similar to other authentication components, an `useEffect` redirects already logged-in users to the `/dashboard`.
+
+##### 2.4.5 Complete Password Reset (Backend - `/reset-password` Endpoint)
+
+The backend handles the final step of setting the new password.
+
+* **Endpoint:** `POST /reset-password`
+* **Purpose:** Validates the reset token and updates the user's password.
+* **Request Parameters:**
+    * `token`: String, the temporary token from the URL.
+* **Request Body:** Expects a JSON body with a single field: `newPassword` (String).
+* **`authService.resetPassword(String token, String newPassword)`:**
+    1.  **Temporary User Lookup:** Finds the `TempUser` record by the provided `token`. Throws "Invalid or Expired token..." if not found.
+    2.  **Token Expiry Check:** Verifies if the `TempUser` token has expired. If expired, the `TempUser` record is deleted, and an error is returned (though the provided code deletes it *before* throwing the expiry error, which might need slight adjustment in actual implementation for consistent error flow).
+    3.  **New vs. Old Password Check:** Compares the `newPassword` (after hashing) with the *original* hashed password stored in `TempUser` (which was copied from the `User` table). Throws "New password cannot be the same as the old password" if they match.
+    4.  **Original User Retrieval:** Retrieves the actual `User` entity using `tempUser.getUser_id()`. Throws "User not found" if somehow the user is missing.
+    5.  **Password Update:** The `User`'s `passwordHash` is updated with the newly `passwordEncoder.encode(newPassword)`.
+    6.  **Save User:** The updated `User` record is saved to `userRepo`.
+    7.  **Clean Up:** The `TempUser` record is deleted from `tempUserRepository`.
+    8.  **Logging:** `loggers.info` statements track the process.
+* **Error Handling:**
+    * Throws `RuntimeException` for various validation failures (e.g., invalid/expired token, new password is same as old, user not found).
+    * These exceptions are caught by the controller and returned as `ResponseEntity.badRequest()`.
+
 ---
+
 
 
