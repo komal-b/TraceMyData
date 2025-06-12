@@ -79,6 +79,7 @@ public class AuthService {
     // Handles user registration for local auth
     @Transactional
     public ResponseEntity<?> register(String token) {
+    User newUser = null;
         // Check if email is already registered
     TempUser tempUser = tempUserRepository.findByToken(token)
             .orElseThrow(() -> new RuntimeException("Invalid or Expired token. Try registering again."));
@@ -90,19 +91,26 @@ public class AuthService {
 
 
     // Create new user entity
-    User newUser = userRepo.findById(tempUser.getUser_id())
-            .orElse(new User()); // If user already exists, update it
+    if(tempUser.getUser_id() != null) {
+        newUser = userRepo.findById(tempUser.getUser_id()).get();
+    }else{
+        newUser = new User();
+    }
 
-    newUser.setFirstName(tempUser.getFirstName());
-    newUser.setLastName(tempUser.getLastName());
-    newUser.setEmail(tempUser.getEmail());
-    newUser.setPasswordHash(tempUser.getPassword());
-    newUser.setAuthProvider("local");
-
-    userRepo.save(newUser);
-    tempUserRepository.delete(tempUser); // Clean up temp user
+    userRegisterUpdate(tempUser, newUser); // Clean up temp user
 
     return ResponseEntity.ok("Email verified! Redirecting to login...");
+    }
+
+    private void userRegisterUpdate(TempUser tempUser, User newUser) {
+        newUser.setFirstName(tempUser.getFirstName());
+        newUser.setLastName(tempUser.getLastName());
+        newUser.setEmail(tempUser.getEmail());
+        newUser.setPasswordHash(tempUser.getPassword());
+        newUser.setAuthProvider("local");
+
+        userRepo.save(newUser);
+        tempUserRepository.delete(tempUser);
     }
 
     // Handles login for local users
