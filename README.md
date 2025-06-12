@@ -163,6 +163,52 @@ The backend handles local (email/password) login requests via the `/login` endpo
         * "Invalid credentials": If the password does not match the stored hash.
         * General `Exception` handling catches other unexpected errors, returning their messages.
 
+#### 2.3 OAuth Login Functionality (Backend)
+
+This section describes how the backend handles authentication requests from OAuth providers, specifically Google. This functionality is accessed in Register nad Login Page
+
+##### 2.3.1 Google OAuth Login Endpoint
+
+* **Endpoint:** `POST /google`
+* **Purpose:** Receives the Google ID Token from the frontend and initiates the backend Google OAuth verification and login process.
+* **Request Body:** Expects a JSON body with a single field:
+    * `idToken`: String, the Google ID Token obtained from the frontend.
+* **Validation:** Checks if the `idToken` is present and not empty.
+* **Process:** Delegates the token verification and login logic to `authService.loginWithGoogle(token)`.
+* **Response:** Returns a `ResponseEntity.ok()` with the `AuthResponse` object from `authService` on success, or `ResponseEntity.badRequest()` on failure.
+
+##### 2.3.2 Backend Google Login Logic (`authService.loginWithGoogle`)
+
+This method is responsible for verifying the Google ID Token and processing the user's login.
+
+* **Token Verification:**
+    * It calls `jwtUtil.verifyGoogleToken(idToken)` to validate the authenticity and integrity of the Google ID Token. This method is expected to return a `Map<String, Object>` containing the token's payload (e.g., email, given_name, family_name).
+* **Common OAuth Handling:** The verified payload is then passed to the `handleOAuthLogin` private method for further processing, along with the provider name ("google").
+
+##### 2.3.3 Common OAuth Login Handling (`handleOAuthLogin`)
+
+This is a transactional method designed to handle the login process for any OAuth provider, based on a verified payload.
+
+* **Payload Data:** Extracts the user's `email` from the verified `payload`.
+* **User Existence Check:**
+    * It queries `userRepo.findByEmail(email)` to check if a user with that email already exists in the main `User` database.
+    * **Existing User:** If the user exists, the existing `User` entity is retrieved.
+    * **New OAuth User:** If the user does *not* exist, the `registerNewOAuthUser` method is called to create a new `User` record for this OAuth login.
+* **Token Generation:** A JWT token is generated for the authenticated or newly registered `User` using `jwtUtil.generateToken(user)`.
+* **Response:** Returns an `AuthResponse` object containing the user's details and the generated JWT.
+* **Error Handling:**
+    * Catches `DataIntegrityViolationException` for potential database errors during user registration (e.g., unique constraint violation).
+    * Catches generic `Exception` for other OAuth login failures, throwing a `RuntimeException` with a "OAuth login failed" message.
+
+##### 2.3.4 New OAuth User Registration (`registerNewOAuthUser`)
+
+This private method is specifically for creating a new `User` entity when a user logs in via OAuth for the first time.
+
+* **New User Creation:** Initializes a new `User` object.
+* **Populate Fields:** Sets the `email`, `firstName` (from `given_name` in payload), `lastName` (from `family_name` in payload) from the OAuth payload.
+* **Authentication Provider:** Explicitly sets the `authProvider` to "google" to indicate the origin of this account.
+* **Save User:** The new `User` entity is saved to the main `User` database via `userRepo.save(newUser)`.
+
 ---
 
 
