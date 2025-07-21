@@ -49,6 +49,7 @@ export default function ProfileUpdate({ open, onClose, user, onUserUpdate, token
   }, [user]); // Depend on the 'user' prop
 
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const validateEmail = (email: string) => {
     const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -75,8 +76,9 @@ export default function ProfileUpdate({ open, onClose, user, onUserUpdate, token
       toast.error('Invalid email.');
       return;
     }
-
+   
     try {
+       setLoading(true);
       const res = await fetch('http://localhost:8080/api/auth/update-profile', {
         method: 'POST',
         headers: {
@@ -92,6 +94,7 @@ export default function ProfileUpdate({ open, onClose, user, onUserUpdate, token
       const data = await res.json();
 
       if (!res.ok) {
+        setLoading(false);
         toast.error(data.error);
       } else {
         // Construct the updated user object based on the response
@@ -122,7 +125,9 @@ export default function ProfileUpdate({ open, onClose, user, onUserUpdate, token
   };
 
   const handlePasswordChange = async () => {
+    
     try {
+      setLoading(true);
       const res = await fetch('http://localhost:8080/api/auth/change-password', {
         method: 'POST',
         headers: {
@@ -136,6 +141,7 @@ export default function ProfileUpdate({ open, onClose, user, onUserUpdate, token
       });
       const message = await res.text();
       if (!res.ok) {
+        setLoading(false);
         toast.error(message);
         return;
       }
@@ -219,8 +225,14 @@ export default function ProfileUpdate({ open, onClose, user, onUserUpdate, token
             </button>
             <button
               onClick={handleSave}
-              className="px-4 py-2 rounded bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold hover:from-blue-700 hover:to-purple-700"
+              className= {`w-full flex justify-center items-center gap-2 ${
+                loading ? 'cursor-not-allowed opacity-70' : ''
+              }px-4 py-2 rounded bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold hover:from-blue-700 hover:to-purple-700`}
             >
+               
+          {loading && (
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          )}
               Save Changes
             </button>
           </div>
@@ -287,8 +299,14 @@ export default function ProfileUpdate({ open, onClose, user, onUserUpdate, token
 
                   <button
                     onClick={handlePasswordChange}
-                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white p-3 rounded-lg font-semibold shadow-md"
+                    className={`w-full flex justify-center items-center gap-2 ${
+                    loading ? 'cursor-not-allowed opacity-70' : ''
+                    }w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white p-3 rounded-lg font-semibold shadow-md`}
                   >
+               
+                      {loading && (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      )}
                     Update Password
                   </button>
                 </div>

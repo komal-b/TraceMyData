@@ -74,7 +74,7 @@ public class JwtUtil {
         return extractUsername(token).equals(userDetails.getUsername());
     }
 
-      public String extractUsername(String token) {
+    public String extractUsername(String token) {
         String email =  getUserIdFromToken(token);
         loggers.info("Extracted email from token: " + email);
         return email; // 'sub' in JWT is email
@@ -102,6 +102,21 @@ public class JwtUtil {
             throw new RuntimeException("Invalid Google ID token");
         }
         return response.getBody(); // contains email, name, etc.
+    }
+
+
+    public String extractAuthProvider(String jwt) { 
+        try {
+            return Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(jwt)
+                    .getPayload()
+                    .get("authProvider", String.class); // custom
+        } catch (JwtException e) {
+            loggers.error("Failed to extract auth provider from JWT: {}", e.getMessage());
+            throw new RuntimeException("Invalid JWT token");
+        }
     }
 
 }

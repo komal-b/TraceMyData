@@ -20,6 +20,7 @@ export default function Login() {
   });
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   
   
 
@@ -29,7 +30,7 @@ export default function Login() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-
+    setLoading(true);
     try {
     const response = await fetch('http://localhost:8080/api/auth/login', {
       method: 'POST',
@@ -43,6 +44,7 @@ export default function Login() {
    
     if (!response.ok) {
       const message = await response.text();
+      setLoading(false);
       setServerError(message); // show "Error logging in"
       return;
     }
@@ -132,11 +134,18 @@ export default function Login() {
           {/* Submit Button */}
         <button
           type="submit"
-          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white p-3 rounded-lg font-semibold shadow-md transition-all"
+          disabled={loading}
+          className={`w-full flex justify-center items-center gap-2 ${
+                loading ? 'cursor-not-allowed opacity-70' : ''
+              } bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white p-3 rounded-lg font-semibold shadow-md transition-all`}
         >
+          {loading && (
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          )}
           Login
         </button>
 
+        
         {/* Social Buttons */}
         <div className="flex flex-col gap-3 pt-4">
           <GoogleLogin

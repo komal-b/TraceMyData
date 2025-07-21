@@ -7,6 +7,7 @@ const [emailError, setEmailError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -35,6 +36,7 @@ const validateEmail = (email: string) => {
     e.preventDefault();
     setMessage(null);
     setError(null);
+    setLoading(true);
 
     try {
       const response = await fetch('http://localhost:8080/api/auth/forgot-password', {
@@ -48,6 +50,7 @@ const validateEmail = (email: string) => {
       const message = await response.text();
 
       if (!response.ok) {
+        setLoading(false);
         setMessage(message); // show "Email already registered"
         return;
       }
@@ -106,10 +109,17 @@ const validateEmail = (email: string) => {
             required
             />
             
+        
         <button
           type="submit"
-          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white p-3 rounded-lg font-semibold shadow-md transition-all"
+          disabled={loading}
+          className={`w-full flex justify-center items-center gap-2 ${
+                loading ? 'cursor-not-allowed opacity-70' : ''
+              } bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white p-3 rounded-lg font-semibold shadow-md transition-all`}
         >
+          {loading && (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              )}
           Send Reset Link
         </button>
       </form>

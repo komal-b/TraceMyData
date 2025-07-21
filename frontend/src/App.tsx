@@ -11,6 +11,11 @@ import PrivateRoute from './components/PrivateRoute';
 import Dashboard from './pages/Dasboard';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import WebsiteMetadata from './pages/WebsiteMetadata';
+import TrackerDetection from './pages/TrackerDetection';
+import PrivacyEducation from './pages/PrivayEducation';
+import DownloadReports from './pages/DownloadReports';
+import PrivacyRiskScore from './pages/PrivacyRiskScore';
 
 function App() {
   return (
@@ -36,7 +41,13 @@ function App() {
                 </PrivateRoute>
               }
             />
+            <Route path="/metadata" element={<WebsiteMetadata />} />
+            <Route path="/tracker-detection" element={<TrackerDetection />} />
+            <Route path="/privacy-risk-score" element={<PrivacyRiskScore />} />
+            <Route path="/privacy-education" element={<PrivacyEducation />} />
+            <Route path="/download-reports" element={<DownloadReports />} />
           </Routes>
+
         </main>
 
         <Footer />

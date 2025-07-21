@@ -198,7 +198,7 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthResponse updateProfile(Map<String, String> profileData, String email) {
+    public AuthResponse  updateProfile(Map<String, String> profileData, String email) {
           User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
         

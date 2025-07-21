@@ -11,13 +11,6 @@ services:
       - .env
 
     environment:
-    #   SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
-    #   SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-    #   SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-    #   JWT_SECRET: ${JWT_SECRET}
-    #   MAIL_USERNAME: ${MAIL_USERNAME}
-    #   MAIL_PASSWORD: ${MAIL_PASSWORD}
-    #   MAIL_FROM: ${MAIL_FROM}
       APP_FRONTEND_URL: http://localhost:5173
       JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
 
@@ -42,6 +35,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
+    
       - pgdata:/var/lib/postgresql/data
       
   flyway:
@@ -54,7 +48,18 @@ services:
     command: migrate
     depends_on:
       - db
-      
+
+  ml-service:
+    build: ./ml-service
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    volumes:
+    - ./ml-service:/app
+    - ./ml-service/output:/app/output
 
 volumes:
   pgdata:

@@ -2,6 +2,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProfileUpdate from '../components/ProfileUpdate';
 import type { User } from '../type/User';
+import WebsiteMetadata from './WebsiteMetadata';
+import { logout } from '../utils/Logout';
+import TrackerDetection from './TrackerDetection';
+import PrivacyEducation from './PrivayEducation';
+import DownloadReports from './DownloadReports';
+import PrivacyRiskScore from './PrivacyRiskScore';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -9,18 +15,34 @@ export default function Dashboard() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [user, setUser] = useState<User | null>(null);
- 
+  
+  const isTokenExpired = (token: string) => {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.exp * 1000 < Date.now();
+    } catch (e) {
+      console.error('Invalid token', e);
+      return true; // Consider invalid tokens as expired
+    }
+  };
   
 
   // Auto-collapse on small screens
   useEffect(() => {
     const stored = localStorage.getItem('user');
+
     if (!stored) {
       navigate('/login');
-    } else {
-      setUser(JSON.parse(stored).user);
-      
+      return;
     }
+    const parsedUser = JSON.parse(stored);
+    const token = parsedUser.user?.token;
+    if (!token || isTokenExpired(token)) {
+      logout(navigate);
+      return;
+    }
+
+     setUser(parsedUser.user);
 
     const handleResize = () => {
       setIsCollapsed(window.innerWidth < 768);
@@ -42,57 +64,31 @@ export default function Dashboard() {
       case 'metadata':
         return (
           <div>
-            <h3 className="text-xl font-bold mb-2">Website Metadata Analyzer</h3>
-            <ul className="list-disc ml-6 text-gray-700 space-y-1">
-              <li>URL Input Field</li>
-              <li>Metadata Extraction (title, description, OG tags)</li>
-              <li>Site Preview Card</li>
-            </ul>
+             <WebsiteMetadata />; 
           </div>
         );
       case 'trackers':
         return (
           <div>
-            <h3 className="text-xl font-bold mb-2">Tracker Detection</h3>
-            <ul className="list-disc ml-6 text-gray-700 space-y-1">
-              <li>Detect Embedded Trackers (e.g., Google Analytics)</li>
-              <li>Display 3rd-Party Requests (Playwright/Headless Browser)</li>
-              <li>Show Tracker Risk Level</li>
-            </ul>
+            <TrackerDetection />; 
           </div>
         );
       case 'risk':
         return (
           <div>
-            <h3 className="text-xl font-bold mb-2">Privacy Risk Score</h3>
-            <ul className="list-disc ml-6 text-gray-700 space-y-1">
-              <li>NLP on Privacy/Cookie Policy</li>
-              <li>Risk Scoring (0–100)</li>
-              <li>Risk Reason Tags</li>
-              <li>Color-coded Output</li>
-            </ul>
+            <PrivacyRiskScore />
           </div>
         );
       case 'education':
         return (
           <div>
-            <h3 className="text-xl font-bold mb-2">Privacy Education</h3>
-            <ul className="list-disc ml-6 text-gray-700 space-y-1">
-              <li>Show Guides (e.g., "What is fingerprinting?")</li>
-              <li>Link to Tools/Extensions (VPNs, Ad Blockers)</li>
-              <li>Learn More Page (EFF, Mozilla articles)</li>
-            </ul>
+            <PrivacyEducation />
           </div>
         );
-      case 'history':
+      case 'reports':
         return (
           <div>
-            <h3 className="text-xl font-bold mb-2">Scan History Dashboard</h3>
-            <ul className="list-disc ml-6 text-gray-700 space-y-1">
-              <li>Timeline of Scanned Sites</li>
-              <li>Export Results (CSV/PDF)</li>
-              <li>Bookmark/Favorite Sites</li>
-            </ul>
+            <DownloadReports />
           </div>
         );
       default:
@@ -139,7 +135,7 @@ export default function Dashboard() {
             ['trackers', 'Tracker Detection'],
             ['risk', 'Privacy Risk Score'],
             ['education', 'Privacy Education'],
-            ['history', 'Scan History Dashboard'],
+            ['reports', 'Download Reports'],
           ].map(([key, label]) => (
             <button
               key={key}

@@ -14,7 +14,6 @@ import com.tracemydata.service.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -100,6 +99,7 @@ public class AuthController {
 public ResponseEntity<?> updateProfile(@RequestBody Map<String, String> profileData, @RequestHeader("Authorization") String token) {
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
     String username = auth.getName();
+    loggers.debug(username + " is updating profile with data: {}", profileData);
 
     try {
         Map<String, Object> response = new HashMap<>();

@@ -1,0 +1,38 @@
+{
+  "ads": [
+    "ads", "advertisement", "ad-serving", "sponsored", "adtech", "ad network", "ad tracking", "retargeting", "marketing"
+  ],
+  "tracking": [
+    "tracking", "trackers", "analytics", "behavioral", "cross-site", "pixel", "web beacon", "traffic monitoring", "click tracking"
+  ],
+  "data_collection": [
+    "collect", "collecting", "gather", "gathered", "harvest", "log data", "telemetry", "usage data", "data capture", "data mining"
+  ],
+  "cookies": [
+    "cookie", "cookies", "third-party cookies", "browser cookies", "session cookies", "persistent cookies", "http cookie"
+  ],
+  "personalization": [
+    "personalized", "tailored", "customized", "recommendation", "suggestions", "preference-based", "personal experience"
+  ],
+  "fingerprinting": [
+    "fingerprinting", "canvas", "audio fingerprint", "webgl", "font fingerprinting", "device fingerprint", "browser fingerprint"
+  ],
+  "privacy_policy_terms": [
+    "privacy", "terms of service", "data use", "information sharing", "user data", "privacy practices", "privacy rights", "compliance"
+  ],
+  "security": [
+    "encryption", "secure", "https", "data protection", "security measures", "authentication", "access control", "breach", "leak"
+  ],
+  "location_tracking": [
+    "location", "gps", "geo", "ip tracking", "geolocation", "location services", "ip address"
+  ],
+  "children_protection": [
+    "child", "children", "coppa", "kid", "minors", "parental consent", "under 13", "age restriction"
+  ],
+  "third_party": [
+    "third-party", "partners", "vendors", "external services", "external data", "third-party access"
+  ],
+  "consent": [
+    "consent", "opt-in", "opt-out", "permissions", "user agreement", "accept", "agree", "decline"
+  ]
+}
