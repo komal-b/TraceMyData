@@ -1,6 +1,6 @@
 
 # Only ignore inside frontend
-/backend/target/*.jar
+/backend/target/
 /frontend/node_modules
 /frontend/dist
 .env
