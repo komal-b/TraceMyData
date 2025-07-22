@@ -1,6 +1,6 @@
 
 # Only ignore inside frontend
-/backend/target/
+/backend/target/tracemydata-0.0.1-SNAPSHOT.jar
 /frontend/node_modules
 /frontend/dist
 .env
