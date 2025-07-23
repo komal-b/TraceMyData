@@ -45,7 +45,7 @@
 | **ML Service**| Python (Flask or FastAPI)                   |
 | **Database**  | PostgreSQL                                  |
 | **Auth**      | JWT, Google OAuth                           |
-| **DevOps**    | Docker, Docker Compose                      |
+| **DevOps**    | Docker, Docker Compose, Kubernetes                      |
 
 ---
 
@@ -84,6 +84,9 @@
 - **Containerized with Docker Compose**  
   - All components (frontend, backend, ML service, PostgreSQL) run as containers  
   - Single command to build and launch the full system
+ 
+- **☸️ Kubernetes Deployement**
+  - kubectl apply -f k8s/
  
 ## ⚠️ Limitations
 
