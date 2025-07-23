@@ -1,6 +1,13 @@
 # 📡 TraceMyData
 
 **TraceMyData** is a full-stack privacy awareness platform that empowers users to analyze websites for privacy practices. It extracts metadata, detects third-party trackers using automated crawling, and computes a privacy risk score using a machine learning model.
+<p align="center">
+  <img src="https://img.shields.io/badge/Backend-Java%20%7C%20Spring%20Boot-blue" />
+  <img src="https://img.shields.io/badge/Frontend-React%20%7C%20TypeScript-green" />
+  <img src="https://img.shields.io/badge/ML-Python%20Microservice-yellow" />
+  <img src="https://img.shields.io/badge/Auth-JWT%20%7C%20OAuth-red" />
+  <img src="https://img.shields.io/badge/Container-Docker-blueviolet" />
+</p>
 
 ---
 
