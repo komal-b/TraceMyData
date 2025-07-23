@@ -42,14 +42,6 @@
 
 ---
 
-## 📁 Folder Structure
-
-TraceMyData/
-├── backend/ # Java Spring Boot backend
-├── frontend/ # React frontend
-├── ml_service/ # Python ML scoring API
-├── docker-compose.yaml
-└── README.md
 
 ## 💻 Usage
 
