@@ -85,7 +85,7 @@
   - All components (frontend, backend, ML service, PostgreSQL) run as containers  
   - Single command to build and launch the full system
  
-- **☸️ Kubernetes Deployement**
+- **Kubernetes Deployement**
   - kubectl apply -f k8s/
  
 ## ⚠️ Limitations
