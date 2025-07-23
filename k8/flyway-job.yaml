@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: flyway-migrate
+spec:
+  template:
+    spec:
+      containers:
+        - name: flyway
+          image: flyway/flyway:latest
+          command: ["flyway", "migrate"]
+          volumeMounts:
+            - name: flyway-conf
+              mountPath: /flyway/conf
+            - name: flyway-sql
+              mountPath: /flyway/sql
+          envFrom:
+            - secretRef:
+                name: env-secret
+      volumes:
+        - name: flyway-conf
+          hostPath:
+            path: /path/to/your/flyway/conf
+        - name: flyway-sql
+          hostPath:
+            path: /path/to/your/backend/sql
+      restartPolicy: OnFailure
