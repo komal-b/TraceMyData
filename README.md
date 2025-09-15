@@ -32,7 +32,7 @@
   - Download privacy analysis as a CSV report
 
 - **📚 Privacy Education**
-  - In-app guidance and tips on staying private online
+  - Tips on staying private online
 
 ---
 
