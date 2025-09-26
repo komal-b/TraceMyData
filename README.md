@@ -43,7 +43,7 @@
 | **Frontend**  | React (TypeScript), Tailwind CSS            |
 | **Backend**   | Java, Spring Boot, Spring MVC, Spring JPA   |
 | **ML Service**| Python (FastAPI)                   |
-| **Database**  | PostgreSQL                                  |
+| **Database**  | PostgreSQL, Flyway                                  |
 | **Auth**      | JWT, Google OAuth                           |
 | **DevOps**    | Docker, Docker Compose, Kubernetes                      |
 
