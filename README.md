@@ -45,7 +45,7 @@
 | **ML Service**| Python (FastAPI)                   |
 | **Database**  | PostgreSQL, Flyway                                  |
 | **Auth**      | JWT, Google OAuth                           |
-| **DevOps**    | Docker, Docker Compose, Kubernetes                      |
+| **DevOps**    | Docker, Docker Compose                      |
 
 ---
 
